@@ -7,7 +7,7 @@ pub struct NavBarLink<'a> {
 }
 
 #[derive(Template, Default)]
-#[template(path = "navbar.html")]
+#[template(path = "navbar.html", escape="none")]
 pub struct NavigationBar<'a> {
     pub elements: Vec<NavBarLink<'a>>,
 }
