@@ -1,7 +1,7 @@
 <nav class="navbar">
   <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="/projects">Projects</a></li>
-    <li><a href="/about">About</a></li>
+    {% for element in elements %}
+    <li><a href="{{element.path}}">{{element.name}}</a></li>
+    {% endfor %}
   </ul>
 </nav>
