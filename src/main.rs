@@ -17,16 +17,33 @@ struct BaseTemplate<'a> {
 
 fn create_navbar<'a>() -> NavigationBar<'a> {
     let navbar_elements = vec![
-        NavBarLink { name: "Home", path: "" },
-        NavBarLink { name: "About", path: "/about.html" },
+        NavBarLink {
+            name: "Home",
+            path: "",
+        },
+        NavBarLink {
+            name: "About",
+            path: "/about.html",
+        },
     ];
 
-    NavigationBar { elements: navbar_elements }
+    NavigationBar {
+        elements: navbar_elements,
+    }
 }
 
 fn main() {
-    let base = BaseTemplate { title: "title!", description: "description!", navbar: create_navbar() };
-    let mut file = OpenOptions::new().create(true).write(true).truncate(true).open("index.html").unwrap();
+    let base = BaseTemplate {
+        title: "title!",
+        description: "description!",
+        navbar: create_navbar(),
+    };
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("index.html")
+        .unwrap();
     file.write_all(base.render().unwrap().as_bytes()).unwrap();
     file.flush().unwrap();
 }
