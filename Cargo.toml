@@ -8,3 +8,4 @@ edition = "2024"
 [dependencies]
 askama = "0.14.0"
 markdown = "1.0.0"
+chrono = "0.4.42"
