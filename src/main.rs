@@ -40,11 +40,15 @@ fn create_navbar<'a>() -> NavigationBar<'a> {
 
 fn main() {
     let navbar = create_navbar();
+
+    let post_content = markdown::to_html_with_options(&std::fs::read_to_string("posts/20251103.md").unwrap(),
+    &markdown::Options::gfm()).unwrap();
+
     let base = BaseTemplate {
         title: "Home",
         description: "Home page description goes here!",
         navbar,
-        post: Post{title: "Test", content: "This is a test of a post's contents. Soon it will be parsed from a markdown file. For now, I'm just typing a rather long sentence to see how text wrapping gets handled. The quick brown fox jumps over the lazy dog."},
+        post: Post { title: "Test", content: &post_content },
     };
 
     let mut file = OpenOptions::new()
