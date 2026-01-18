@@ -29,6 +29,11 @@
 :root {
 }
 
+blockquote {
+    border-left: yellow 4px solid;
+    padding-left: 12px;
+}
+
 header {
     padding: .50rem 0;
 }
@@ -38,7 +43,6 @@ p {
 }
 
 body {
-    padding: .50rem 0;
     text-shadow: .1rem .1rem 0 rgba(127, 95, 0, .5);
 }
 
