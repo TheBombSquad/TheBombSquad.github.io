@@ -2,12 +2,13 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
 use askama::Template;
-use chrono::{DateTime, Local, NaiveDate};
+use chrono::NaiveDate;
 use crate::elements::navbar::{NavBarLink, NavigationBar};
 use crate::elements::post::Post;
 use anyhow::{Context, Result};
 use gray_matter::engine::YAML;
 use gray_matter::{Matter, ParsedEntity};
+use tracing_subscriber::FmtSubscriber;
 
 mod elements;
 
@@ -44,6 +45,9 @@ fn create_navbar<'a>() -> NavigationBar<'a> {
 fn parse_markdown_post(path: &Path) -> Result<()> {
     let matter = Matter::<YAML>::new();
 
+    let post_filename = path.with_extension("html");
+    let post_path_name = format!("out/{}", post_filename.to_str().context("Failed to convert filename to string")?);
+
     let post_content_raw = &std::fs::read_to_string(path)?;
     let parsed_result: ParsedEntity = matter.parse(post_content_raw)?;
 
@@ -70,19 +74,34 @@ fn parse_markdown_post(path: &Path) -> Result<()> {
         .create(true)
         .write(true)
         .truncate(true)
-        .open("out/index.html")?;
+        .open(post_path_name)?;
     file.write_all(base.render()?.as_bytes())?;
     file.flush()?;
     Ok(())
 }
 
 fn main() {
-    // For each post in the 'posts' directory, call parse_markdown_post.
-    for entry in std::fs::read_dir("posts").unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.extension() == Some("md".as_ref()) {
-            parse_markdown_post(&path).unwrap();
+    // Logging
+    let tracing_subscriber = FmtSubscriber::new();
+    tracing::subscriber::set_global_default(tracing_subscriber)
+    .expect("setting tracing default failed");
+
+    // Markdown posts
+    if let Ok(posts) = std::fs::read_dir("posts") {
+        for entry in posts {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if path.extension() == Some("md".as_ref()) {
+                if let Ok(()) = parse_markdown_post(&path) {
+                    tracing::info!("Parsed markdown file {:?}", path);
+                }
+                else {
+                    tracing::warn!("Failed to parse markdown file {:?}", path);
+                }
+            }
+            else {
+                tracing::warn!("Skipping non-markdown file {:?}", path);
+            }
         }
     }
 }
