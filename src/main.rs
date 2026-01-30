@@ -19,6 +19,7 @@ mod elements;
 struct BaseTemplate {
     title: Cow<'static, str>,
     description: Cow<'static, str>,
+    path: Cow<'static, str>,
     navbar: NavigationBar,
     post: Rc<Post>,
 }
@@ -80,27 +81,22 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
     Ok(post)
 }
 
-fn new_page_from_post(post: Rc<Post>, path: &PathBuf) -> Result<BaseTemplate> {
-    let post_filename = path.with_extension("html");
-    let post_path_name = format!(
-        "out/{}",
-        post_filename
-            .to_str()
-            .context("Failed to convert filename to string")?
-    );
+fn new_page_from_post(post: &Rc<Post>) -> Result<BaseTemplate> {
+    let post_filename = format!("out/posts/{}.html", post.date.format("%Y-%m-%d"));
 
     let base = BaseTemplate {
         title: post.title.clone(),
         description: post.description.clone(),
+        path: Cow::Owned(post_filename),
         navbar: create_navbar(),
-        post: Rc::clone(&post),
+        post: Rc::clone(post),
     };
 
     let mut file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open(post_path_name)?;
+        .open(&*base.path)?;
     file.write_all(base.render()?.as_bytes())?;
     file.flush()?;
 
@@ -113,26 +109,40 @@ fn main() {
     tracing::subscriber::set_global_default(tracing_subscriber)
         .expect("setting tracing default failed");
 
-    // Markdown posts
-    if let Ok(posts) = std::fs::read_dir("posts") {
-        for entry in posts {
+    // Collate Markdown posts
+    let mut posts: Vec<Rc<Post>> = Vec::new();
+
+    if let Ok(post_files) = std::fs::read_dir("posts") {
+        for entry in post_files {
             let entry = entry.unwrap();
             let path = entry.path();
             if path.extension() == Some("md".as_ref()) {
                 let post_parse = parse_markdown_post(&path);
                 match post_parse {
                     Ok(post) => {
-                        let post_rc = Rc::new(post);
-                        new_page_from_post(Rc::clone(&post_rc), &path);
                         tracing::info!("Parsed markdown file {:?}", path);
+
+                        let post_rc = Rc::new(post);
+
+                        posts.push(post_rc);
                     }
-                    Err(err) => {
-                        tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err);
-                    }
+                    Err(err) => tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err)
                 }
             } else {
                 tracing::warn!("Skipping non-markdown file {:?}", path);
             }
         }
     }
+
+    // Actually create the pages
+    for post in posts {
+        let page_creation = new_page_from_post(&post);
+        match page_creation {
+            Ok(page) => {
+                tracing::info!("Created page {:?}", page.path);
+            }
+            Err(err) => tracing::error!("Failed to create page for post {:?}: {:?}", post.title, err),
+        }
+    }
+
 }
