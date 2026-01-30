@@ -40,6 +40,10 @@ header {
     padding: .50rem 0;
 }
 
+footer {
+    padding: .50rem 0;
+}
+
 p {
     max-width: 80ch;
 }

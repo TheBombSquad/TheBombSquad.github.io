@@ -1,5 +1,6 @@
+use crate::elements::base::BaseTemplate;
 use crate::elements::navbar::{NavBarLink, NavigationBar};
-use crate::elements::post::Post;
+use crate::elements::post::{Post, PostPage};
 use anyhow::{Context, Result};
 use askama::Template;
 use chrono::NaiveDate;
@@ -13,16 +14,6 @@ use std::rc::Rc;
 use tracing_subscriber::FmtSubscriber;
 
 mod elements;
-
-#[derive(Template)]
-#[template(path = "base.html")]
-struct BaseTemplate {
-    title: Cow<'static, str>,
-    description: Cow<'static, str>,
-    path: Cow<'static, str>,
-    navbar: NavigationBar,
-    post: Rc<Post>,
-}
 
 fn create_navbar() -> NavigationBar {
     let navbar_elements = vec![
@@ -73,7 +64,7 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
     let post = Post {
         title: Cow::Owned(post_title),
         description: Cow::Owned(post_description),
-        content: Cow::Owned(post_content_body),
+        body: Cow::Owned(post_content_body),
         date: post_creation_date,
         tags: post_tags,
     };
@@ -81,15 +72,15 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
     Ok(post)
 }
 
-fn new_page_from_post(post: &Rc<Post>) -> Result<BaseTemplate> {
+fn new_page_from_post(post: &Rc<Post>) -> Result<PostPage> {
     let post_filename = format!("out/posts/{}.html", post.date.format("%Y-%m-%d"));
 
-    let base = BaseTemplate {
+    let base = PostPage {
         title: post.title.clone(),
         description: post.description.clone(),
         path: Cow::Owned(post_filename),
         navbar: create_navbar(),
-        post: Rc::clone(post),
+        content: Rc::clone(post),
     };
 
     let mut file = OpenOptions::new()
@@ -126,7 +117,9 @@ fn main() {
 
                         posts.push(post_rc);
                     }
-                    Err(err) => tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err)
+                    Err(err) => {
+                        tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err)
+                    }
                 }
             } else {
                 tracing::warn!("Skipping non-markdown file {:?}", path);
@@ -141,8 +134,9 @@ fn main() {
             Ok(page) => {
                 tracing::info!("Created page {:?}", page.path);
             }
-            Err(err) => tracing::error!("Failed to create page for post {:?}: {:?}", post.title, err),
+            Err(err) => {
+                tracing::error!("Failed to create page for post {:?}: {:?}", post.title, err)
+            }
         }
     }
-
 }
