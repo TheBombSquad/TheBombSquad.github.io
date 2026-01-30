@@ -1,6 +1,6 @@
-use std::borrow::Cow;
 use askama::Template;
 use chrono::NaiveDate;
+use std::borrow::Cow;
 
 #[derive(Template, Default)]
 #[template(path = "post-body.html", escape = "none")]

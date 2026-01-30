@@ -1,15 +1,15 @@
+use crate::elements::navbar::{NavBarLink, NavigationBar};
+use crate::elements::post::Post;
+use anyhow::{Context, Result};
+use askama::Template;
+use chrono::NaiveDate;
+use gray_matter::engine::YAML;
+use gray_matter::{Matter, ParsedEntity};
 use std::borrow::Cow;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use askama::Template;
-use chrono::NaiveDate;
-use crate::elements::navbar::{NavBarLink, NavigationBar};
-use crate::elements::post::Post;
-use anyhow::{Context, Result};
-use gray_matter::engine::YAML;
-use gray_matter::{Matter, ParsedEntity};
 use tracing_subscriber::FmtSubscriber;
 
 mod elements;
@@ -17,8 +17,8 @@ mod elements;
 #[derive(Template)]
 #[template(path = "base.html")]
 struct BaseTemplate {
-    title: Cow::<'static, str>,
-    description: Cow::<'static, str>,
+    title: Cow<'static, str>,
+    description: Cow<'static, str>,
     navbar: NavigationBar,
     post: Rc<Post>,
 }
@@ -66,23 +66,28 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
         }
     }
 
-    let post_content_body = markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
-
+    let post_content_body =
+        markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
 
     let post = Post {
-            title: Cow::Owned(post_title),
-            description: Cow::Owned(post_description),
-            content: Cow::Owned(post_content_body),
-            date: post_creation_date,
-            tags: post_tags
-        };
-    
+        title: Cow::Owned(post_title),
+        description: Cow::Owned(post_description),
+        content: Cow::Owned(post_content_body),
+        date: post_creation_date,
+        tags: post_tags,
+    };
+
     Ok(post)
 }
 
 fn new_page_from_post(post: Rc<Post>, path: &PathBuf) -> Result<BaseTemplate> {
     let post_filename = path.with_extension("html");
-    let post_path_name = format!("out/{}", post_filename.to_str().context("Failed to convert filename to string")?);
+    let post_path_name = format!(
+        "out/{}",
+        post_filename
+            .to_str()
+            .context("Failed to convert filename to string")?
+    );
 
     let base = BaseTemplate {
         title: post.title.clone(),
@@ -106,7 +111,7 @@ fn main() {
     // Logging
     let tracing_subscriber = FmtSubscriber::new();
     tracing::subscriber::set_global_default(tracing_subscriber)
-    .expect("setting tracing default failed");
+        .expect("setting tracing default failed");
 
     // Markdown posts
     if let Ok(posts) = std::fs::read_dir("posts") {
@@ -120,13 +125,12 @@ fn main() {
                         let post_rc = Rc::new(post);
                         new_page_from_post(Rc::clone(&post_rc), &path);
                         tracing::info!("Parsed markdown file {:?}", path);
-                    },
+                    }
                     Err(err) => {
                         tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err);
                     }
                 }
-            }
-            else {
+            } else {
                 tracing::warn!("Skipping non-markdown file {:?}", path);
             }
         }
