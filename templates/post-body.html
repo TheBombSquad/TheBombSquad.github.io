@@ -1,7 +1,13 @@
 <div class="container border">
   <div class="mx-auto" style="max-width: 80ch;">
     <p class="h3 pt-3 mb-0"><b>{{ title }}</b></p>
-    <p class="pt-0"><i>{{ date }}</i></p>
+    <p class="pt-0"><i>{{ date }}</i>
+      {% if tags.len() > 0 %}
+      {% for tag in tags %}
+      <span class="badge">{{ tag }}</span>
+      {% endfor %}
+    {% endif %}
+    </p>
     <p>{{ content }}</p>
   </div>
 </div>

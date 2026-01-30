@@ -1,6 +1,8 @@
+use std::borrow::Cow;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use askama::Template;
 use chrono::NaiveDate;
 use crate::elements::navbar::{NavBarLink, NavigationBar};
@@ -14,26 +16,26 @@ mod elements;
 
 #[derive(Template)]
 #[template(path = "base.html")]
-struct BaseTemplate<'a> {
-    title: &'a str,
-    description: &'a str,
-    navbar: NavigationBar<'a>,
-    post: Post<'a>,
+struct BaseTemplate {
+    title: Cow::<'static, str>,
+    description: Cow::<'static, str>,
+    navbar: NavigationBar,
+    post: Rc<Post>,
 }
 
-fn create_navbar<'a>() -> NavigationBar<'a> {
+fn create_navbar() -> NavigationBar {
     let navbar_elements = vec![
         NavBarLink {
-            name: "Home",
-            path: "",
+            name: Cow::Borrowed("Home"),
+            path: Cow::Borrowed(""),
         },
         NavBarLink {
-            name: "Projects",
-            path: "/about.html",
+            name: Cow::Borrowed("Projects"),
+            path: Cow::Borrowed("/about.html"),
         },
         NavBarLink {
-            name: "About",
-            path: "/about.html",
+            name: Cow::Borrowed("About"),
+            path: Cow::Borrowed("/about.html"),
         },
     ];
 
@@ -42,11 +44,8 @@ fn create_navbar<'a>() -> NavigationBar<'a> {
     }
 }
 
-fn parse_markdown_post(path: &Path) -> Result<()> {
+fn parse_markdown_post(path: &Path) -> Result<Post> {
     let matter = Matter::<YAML>::new();
-
-    let post_filename = path.with_extension("html");
-    let post_path_name = format!("out/{}", post_filename.to_str().context("Failed to convert filename to string")?);
 
     let post_content_raw = &std::fs::read_to_string(path)?;
     let parsed_result: ParsedEntity = matter.parse(post_content_raw)?;
@@ -60,14 +59,36 @@ fn parse_markdown_post(path: &Path) -> Result<()> {
     let post_creation_date_str = post_matter["date"].as_string()?;
     let post_creation_date = NaiveDate::parse_from_str(&post_creation_date_str, "%Y-%m-%d")?;
 
+    let mut post_tags = Vec::new();
+    if let Ok(post_tags_raw) = post_matter["tags"].as_vec() {
+        for tag in post_tags_raw {
+            post_tags.push(tag.as_string()?);
+        }
+    }
+
     let post_content_body = markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
 
-    let navbar = create_navbar();
+
+    let post = Post {
+            title: Cow::Owned(post_title),
+            description: Cow::Owned(post_description),
+            content: Cow::Owned(post_content_body),
+            date: post_creation_date,
+            tags: post_tags
+        };
+    
+    Ok(post)
+}
+
+fn new_page_from_post(post: Rc<Post>, path: &PathBuf) -> Result<BaseTemplate> {
+    let post_filename = path.with_extension("html");
+    let post_path_name = format!("out/{}", post_filename.to_str().context("Failed to convert filename to string")?);
+
     let base = BaseTemplate {
-        title: &post_title,
-        description: &post_description,
-        navbar,
-        post: Post { title: &post_title, content: &post_content_body, date: post_creation_date },
+        title: post.title.clone(),
+        description: post.description.clone(),
+        navbar: create_navbar(),
+        post: Rc::clone(&post),
     };
 
     let mut file = OpenOptions::new()
@@ -77,7 +98,8 @@ fn parse_markdown_post(path: &Path) -> Result<()> {
         .open(post_path_name)?;
     file.write_all(base.render()?.as_bytes())?;
     file.flush()?;
-    Ok(())
+
+    Ok(base)
 }
 
 fn main() {
@@ -92,11 +114,16 @@ fn main() {
             let entry = entry.unwrap();
             let path = entry.path();
             if path.extension() == Some("md".as_ref()) {
-                if let Ok(()) = parse_markdown_post(&path) {
-                    tracing::info!("Parsed markdown file {:?}", path);
-                }
-                else {
-                    tracing::warn!("Failed to parse markdown file {:?}", path);
+                let post_parse = parse_markdown_post(&path);
+                match post_parse {
+                    Ok(post) => {
+                        let post_rc = Rc::new(post);
+                        new_page_from_post(Rc::clone(&post_rc), &path);
+                        tracing::info!("Parsed markdown file {:?}", path);
+                    },
+                    Err(err) => {
+                        tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err);
+                    }
                 }
             }
             else {

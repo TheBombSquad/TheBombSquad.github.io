@@ -1,13 +1,12 @@
+use std::borrow::Cow;
 use askama::Template;
-
-#[derive(Copy, Clone)]
-pub struct NavBarLink<'a> {
-    pub name: &'a str,
-    pub path: &'a str,
+pub struct NavBarLink {
+    pub name: Cow::<'static, str>,
+    pub path: Cow::<'static, str>,
 }
 
 #[derive(Template, Default)]
 #[template(path = "navbar.html", escape = "none")]
-pub struct NavigationBar<'a> {
-    pub elements: Vec<NavBarLink<'a>>,
+pub struct NavigationBar {
+    pub elements: Vec<NavBarLink>,
 }
