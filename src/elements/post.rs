@@ -27,4 +27,3 @@ pub struct PostPage {
     pub post: Rc<Post>,
     pub navbar: NavigationBar,
 }
-

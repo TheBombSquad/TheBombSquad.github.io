@@ -1,8 +1,8 @@
 use crate::elements::navbar::NavigationBar;
+use crate::elements::post::Post;
 use askama::Template;
 use std::borrow::Cow;
 use std::rc::Rc;
-use crate::elements::post::Post;
 
 #[derive(Template)]
 #[template(path = "home.html", escape = "none")]

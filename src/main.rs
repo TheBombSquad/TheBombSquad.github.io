@@ -1,4 +1,4 @@
-use crate::elements::base::BaseTemplate;
+use crate::elements::home::HomePage;
 use crate::elements::navbar::{NavBarLink, NavigationBar};
 use crate::elements::post::{Post, PostPage};
 use anyhow::{Context, Result};
@@ -9,10 +9,9 @@ use gray_matter::{Matter, ParsedEntity};
 use std::borrow::Cow;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::rc::Rc;
 use tracing_subscriber::FmtSubscriber;
-use crate::elements::home::HomePage;
 
 mod elements;
 
@@ -21,6 +20,10 @@ fn create_navbar() -> NavigationBar {
         NavBarLink {
             name: Cow::Borrowed("Home"),
             path: Cow::Borrowed("/"),
+        },
+        NavBarLink {
+            name: Cow::Borrowed("Posts"),
+            path: Cow::Borrowed("/posts/posts.html"),
         },
         NavBarLink {
             name: Cow::Borrowed("Projects"),
@@ -44,7 +47,10 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
     let parsed_result: ParsedEntity = matter.parse(post_content_raw)?;
 
     let post_content = parsed_result.content;
-    let post_matter = parsed_result.data.context("Failed to parse post matter")?.as_hashmap()?;
+    let post_matter = parsed_result
+        .data
+        .context("Failed to parse post matter")?
+        .as_hashmap()?;
 
     let post_title = post_matter["title"].as_string()?;
     let post_description = post_matter["description"].as_string()?;
@@ -52,7 +58,9 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
     let post_creation_date = if post_matter.contains_key("date") {
         let post_creation_date = post_matter["date"].as_string()?;
         Some(NaiveDate::parse_from_str(&post_creation_date, "%Y-%m-%d")?)
-    } else { None };
+    } else {
+        None
+    };
 
     let mut post_tags = Vec::new();
     if let Ok(post_tags_raw) = post_matter["tags"].as_vec() {
@@ -82,7 +90,6 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
 }
 
 fn new_page_from_post(post: &Rc<Post>) -> Result<PostPage> {
-
     let base = PostPage {
         title: post.title.clone(),
         description: post.description.clone(),
@@ -138,23 +145,31 @@ fn main() {
     // Sort posts from newest to oldest
     posts.sort_by(|a, b| b.date.cmp(&a.date));
 
-    let recent_posts = posts.iter().filter(|x| !x.has_tag("_no-index")).take(5).cloned().collect::<Vec<Rc<Post>>>();
+    let recent_posts = posts
+        .iter()
+        .filter(|x| !x.has_tag("_no-index"))
+        .take(5)
+        .cloned()
+        .collect::<Vec<Rc<Post>>>();
 
     // Home page
     let home_page = HomePage {
         title: Cow::Borrowed("Home"),
         description: Cow::Borrowed("bombsqud.dev"),
         navbar: create_navbar(),
-        recent_posts
+        recent_posts,
     };
 
     let mut home_page_file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open("out/index.html").unwrap();
-    home_page_file.write_all(home_page.render().unwrap().as_bytes()).unwrap();
-    home_page_file.flush();
+        .open("out/index.html")
+        .unwrap();
+    home_page_file
+        .write_all(home_page.render().unwrap().as_bytes())
+        .unwrap();
+    home_page_file.flush().unwrap();
 
     // Actually create the pages
     for post in posts {
