@@ -1,6 +1,12 @@
 <div class="container border">
   <div class="mx-auto" style="max-width: 80ch;">
-    <p class="h3 pt-3 mb-0"><b>{{ post.title }}</b></p>
+    <p class="h3 pt-3 mb-0">
+      {%- if !post.has_tag("_no-index") %}
+      <a href="{{ post.path }}" class="nav-link"><b>{{ post.title }}</b></a>
+      {%- else %}
+      <b>{{ post.title }}</b>
+      {%- endif %}
+    </p>
     <p>
       {%- if let Some(date) = post.date %}
       <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ date }}&nbsp</span>

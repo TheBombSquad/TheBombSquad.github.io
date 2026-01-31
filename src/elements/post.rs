@@ -7,6 +7,7 @@ pub struct Post {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
     pub body: Cow<'static, str>,
+    pub path: Cow<'static, str>,
     pub date: Option<NaiveDate>,
     pub tags: Vec<Cow<'static, str>>,
 }

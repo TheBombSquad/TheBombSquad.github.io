@@ -64,9 +64,15 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
     let post_content_body =
         markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
 
+    let post_path = match post_creation_date {
+        Some(date) => format!("posts/{}.html", date.format("%Y-%m-%d")),
+        None => format!("posts/{}.html", post_title.to_ascii_lowercase()),
+    };
+
     let post = Post {
         title: Cow::Owned(post_title),
         description: Cow::Owned(post_description),
+        path: Cow::Owned(post_path),
         body: Cow::Owned(post_content_body),
         date: post_creation_date,
         tags: post_tags,
@@ -76,15 +82,11 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
 }
 
 fn new_page_from_post(post: &Rc<Post>) -> Result<PostPage> {
-    let post_filename = match post.date {
-        Some(date) => format!("out/posts/{}.html", date.format("%Y-%m-%d")),
-        None => format!("out/posts/{}.html", post.title.to_ascii_lowercase()),
-    };
 
     let base = PostPage {
         title: post.title.clone(),
         description: post.description.clone(),
-        path: Cow::Owned(post_filename),
+        path: Cow::Owned(format!("out/{}", post.path)),
         navbar: create_navbar(),
         post: Rc::clone(post),
     };

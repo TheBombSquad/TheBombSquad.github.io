@@ -23,6 +23,9 @@
 
     --bs-primary-rgb: #ffbf00;
 
+    --bs-link-hover-color: #ffff00;
+    --bs-nav-link-hover-color: #ffff00;
+
     --bs-link-color: #b38600;
 
     --bs-font-sans-serif: NEC-AP3-8x16, system-ui;
