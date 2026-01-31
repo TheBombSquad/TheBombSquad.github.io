@@ -20,7 +20,7 @@ fn create_navbar() -> NavigationBar {
     let navbar_elements = vec![
         NavBarLink {
             name: Cow::Borrowed("Home"),
-            path: Cow::Borrowed(""),
+            path: Cow::Borrowed("/"),
         },
         NavBarLink {
             name: Cow::Borrowed("Projects"),
@@ -81,7 +81,7 @@ fn new_page_from_post(post: &Rc<Post>) -> Result<PostPage> {
         description: post.description.clone(),
         path: Cow::Owned(post_filename),
         navbar: create_navbar(),
-        content: Rc::clone(post),
+        post: Rc::clone(post),
     };
 
     let mut file = OpenOptions::new()
@@ -127,6 +127,9 @@ fn main() {
             }
         }
     }
+
+    // Sort posts from newest to oldest
+    posts.sort_by(|a, b| b.date.cmp(&a.date));
 
     // Home page
     let home_page = HomePage {

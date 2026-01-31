@@ -12,11 +12,11 @@ pub struct Post {
 }
 
 #[derive(Template)]
-#[template(path = "post-body.html", escape = "none")]
+#[template(path = "post.html", escape = "none")]
 pub struct PostPage {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
     pub path: Cow<'static, str>,
-    pub content: Rc<Post>,
+    pub post: Rc<Post>,
     pub navbar: NavigationBar,
 }
