@@ -1,10 +1,10 @@
 ---
 title: Projects
-description: A description of the post!
+description: Project listing
 tags:
   - _no-index
 ---
 
-About page. 
+Project listing page. 
 
 To be filled out!
