@@ -12,6 +12,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tracing_subscriber::FmtSubscriber;
+use crate::elements::home::HomePage;
 
 mod elements;
 
@@ -118,7 +119,7 @@ fn main() {
                         posts.push(post_rc);
                     }
                     Err(err) => {
-                        tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err)
+                        tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err);
                     }
                 }
             } else {
@@ -126,6 +127,22 @@ fn main() {
             }
         }
     }
+
+    // Home page
+    let home_page = HomePage {
+        title: Cow::Borrowed("Home"),
+        description: Cow::Borrowed("bombsqud.dev"),
+        navbar: create_navbar(),
+        recent_posts: posts.iter().take(5).cloned().collect(),
+    };
+
+    let mut home_page_file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("out/index.html").unwrap();
+    home_page_file.write_all(home_page.render().unwrap().as_bytes()).unwrap();
+    home_page_file.flush();
 
     // Actually create the pages
     for post in posts {
@@ -135,7 +152,7 @@ fn main() {
                 tracing::info!("Created page {:?}", page.path);
             }
             Err(err) => {
-                tracing::error!("Failed to create page for post {:?}: {:?}", post.title, err)
+                tracing::error!("Failed to create page for post {:?}: {:?}", post.title, err);
             }
         }
     }
