@@ -24,11 +24,11 @@ fn create_navbar() -> NavigationBar {
         },
         NavBarLink {
             name: Cow::Borrowed("Projects"),
-            path: Cow::Borrowed("/about.html"),
+            path: Cow::Borrowed("/posts/projects.html"),
         },
         NavBarLink {
             name: Cow::Borrowed("About"),
-            path: Cow::Borrowed("/about.html"),
+            path: Cow::Borrowed("/posts/about.html"),
         },
     ];
 
@@ -44,18 +44,20 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
     let parsed_result: ParsedEntity = matter.parse(post_content_raw)?;
 
     let post_content = parsed_result.content;
-    let post_matter = parsed_result.data.context("Failed to parse post matter")?;
+    let post_matter = parsed_result.data.context("Failed to parse post matter")?.as_hashmap()?;
 
     let post_title = post_matter["title"].as_string()?;
     let post_description = post_matter["description"].as_string()?;
 
-    let post_creation_date_str = post_matter["date"].as_string()?;
-    let post_creation_date = NaiveDate::parse_from_str(&post_creation_date_str, "%Y-%m-%d")?;
+    let post_creation_date = if post_matter.contains_key("date") {
+        let post_creation_date = post_matter["date"].as_string()?;
+        Some(NaiveDate::parse_from_str(&post_creation_date, "%Y-%m-%d")?)
+    } else { None };
 
     let mut post_tags = Vec::new();
     if let Ok(post_tags_raw) = post_matter["tags"].as_vec() {
         for tag in post_tags_raw {
-            post_tags.push(tag.as_string()?);
+            post_tags.push(Cow::Owned(tag.as_string()?));
         }
     }
 
@@ -74,7 +76,10 @@ fn parse_markdown_post(path: &Path) -> Result<Post> {
 }
 
 fn new_page_from_post(post: &Rc<Post>) -> Result<PostPage> {
-    let post_filename = format!("out/posts/{}.html", post.date.format("%Y-%m-%d"));
+    let post_filename = match post.date {
+        Some(date) => format!("out/posts/{}.html", date.format("%Y-%m-%d")),
+        None => format!("out/posts/{}.html", post.title.to_ascii_lowercase()),
+    };
 
     let base = PostPage {
         title: post.title.clone(),
@@ -131,12 +136,14 @@ fn main() {
     // Sort posts from newest to oldest
     posts.sort_by(|a, b| b.date.cmp(&a.date));
 
+    let recent_posts = posts.iter().filter(|x| !x.has_tag("_no-index")).take(5).cloned().collect::<Vec<Rc<Post>>>();
+
     // Home page
     let home_page = HomePage {
         title: Cow::Borrowed("Home"),
         description: Cow::Borrowed("bombsqud.dev"),
         navbar: create_navbar(),
-        recent_posts: posts.iter().take(5).cloned().collect(),
+        recent_posts
     };
 
     let mut home_page_file = OpenOptions::new()

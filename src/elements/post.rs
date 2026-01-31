@@ -7,8 +7,14 @@ pub struct Post {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
     pub body: Cow<'static, str>,
-    pub date: NaiveDate,
-    pub tags: Vec<String>,
+    pub date: Option<NaiveDate>,
+    pub tags: Vec<Cow<'static, str>>,
+}
+
+impl Post {
+    pub fn has_tag(&self, tag: &str) -> bool {
+        self.tags.contains(&Cow::Borrowed(tag))
+    }
 }
 
 #[derive(Template)]
@@ -20,3 +26,4 @@ pub struct PostPage {
     pub post: Rc<Post>,
     pub navbar: NavigationBar,
 }
+
