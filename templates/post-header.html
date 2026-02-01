@@ -1,0 +1,17 @@
+<div class="mx-auto" style="max-width: 80ch;">
+    <p class="h3 pt-3 mb-0">
+        <a href="{{ post.path }}" class="nav-link"><b>{{ post.title }}</b></a>
+    </p>
+    <p>
+        {%- if let Some(date) = post.date %}
+        <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ date }}&nbsp</span>
+        {%- endif %}
+        {%- if post.tags.len() > 0 %}
+        {%- for tag in post.tags %}
+        {%- if !tag.starts_with("_")  %}
+        <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ tag }}&nbsp</span>
+        {%- endif %}
+        {%- endfor %}
+        {%- endif %}
+    </p>
+</div>

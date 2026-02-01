@@ -1,6 +1,6 @@
 use crate::elements::home::HomePage;
 use crate::elements::navbar::{NavBarLink, NavigationBar};
-use crate::elements::post::{Post, PostPage};
+use crate::elements::post::{Post, PostPage, PostListingPage};
 use anyhow::{Context, Result};
 use askama::Template;
 use chrono::NaiveDate;
@@ -23,7 +23,7 @@ fn create_navbar() -> NavigationBar {
         },
         NavBarLink {
             name: Cow::Borrowed("Posts"),
-            path: Cow::Borrowed("/posts/posts.html"),
+            path: Cow::Borrowed("/posts.html"),
         },
         NavBarLink {
             name: Cow::Borrowed("Projects"),
@@ -155,7 +155,7 @@ fn main() {
     // Home page
     let home_page = HomePage {
         title: Cow::Borrowed("Home"),
-        description: Cow::Borrowed("bombsqud.dev"),
+        description: Cow::Borrowed("bombsquad.dev"),
         navbar: create_navbar(),
         recent_posts,
     };
@@ -170,6 +170,25 @@ fn main() {
         .write_all(home_page.render().unwrap().as_bytes())
         .unwrap();
     home_page_file.flush().unwrap();
+
+    // Posts listing page
+    let posts_page = PostListingPage {
+        title: Cow::Borrowed("Posts"),
+        description: Cow::Borrowed("All posts"),
+        navbar: create_navbar(),
+        posts: posts.iter().filter(|x| !x.has_tag("_no-index")).cloned().collect()
+    };
+
+    let mut posts_page_file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("out/posts.html")
+        .unwrap();
+    posts_page_file
+        .write_all(posts_page.render().unwrap().as_bytes())
+        .unwrap();
+    posts_page_file.flush().unwrap();
 
     // Actually create the pages
     for post in posts {

@@ -27,3 +27,12 @@ pub struct PostPage {
     pub post: Rc<Post>,
     pub navbar: NavigationBar,
 }
+
+#[derive(Template)]
+#[template(path = "post-listing.html", escape = "none")]
+pub struct PostListingPage {
+    pub title: Cow<'static, str>,
+    pub description: Cow<'static, str>,
+    pub posts: Vec<Rc<Post>>,
+    pub navbar: NavigationBar,
+}
