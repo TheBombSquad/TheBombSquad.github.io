@@ -1,8 +1,15 @@
 use crate::elements::navbar::NavigationBar;
+use anyhow::{Context, Result};
 use askama::Template;
 use chrono::NaiveDate;
+use gray_matter::engine::YAML;
+use gray_matter::{Matter, ParsedEntity};
 use std::borrow::Cow;
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::path::Path;
 use std::rc::Rc;
+
 pub struct Post {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
@@ -16,6 +23,55 @@ impl Post {
     pub fn has_tag(&self, tag: &str) -> bool {
         self.tags.contains(&Cow::Borrowed(tag))
     }
+
+    pub fn new(path: &Path) -> Result<Self> {
+        let matter = Matter::<YAML>::new();
+
+        let post_content_raw = &std::fs::read_to_string(path)?;
+        let parsed_result: ParsedEntity = matter.parse(post_content_raw)?;
+
+        let post_content = parsed_result.content;
+        let post_matter = parsed_result
+            .data
+            .context("Failed to parse post matter")?
+            .as_hashmap()?;
+
+        let post_title = post_matter["title"].as_string()?;
+        let post_description = post_matter["description"].as_string()?;
+
+        let post_creation_date = if post_matter.contains_key("date") {
+            let post_creation_date = post_matter["date"].as_string()?;
+            Some(NaiveDate::parse_from_str(&post_creation_date, "%Y-%m-%d")?)
+        } else {
+            None
+        };
+
+        let mut post_tags = Vec::new();
+        if let Ok(post_tags_raw) = post_matter["tags"].as_vec() {
+            for tag in post_tags_raw {
+                post_tags.push(Cow::Owned(tag.as_string()?));
+            }
+        }
+
+        let post_content_body =
+            markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
+
+        let post_path = match post_creation_date {
+            Some(date) => format!("posts/{}.html", date.format("%Y-%m-%d")),
+            None => format!("posts/{}.html", post_title.to_ascii_lowercase()),
+        };
+
+        let post = Post {
+            title: Cow::Owned(post_title),
+            description: Cow::Owned(post_description),
+            path: Cow::Owned(post_path),
+            body: Cow::Owned(post_content_body),
+            date: post_creation_date,
+            tags: post_tags,
+        };
+
+        Ok(post)
+    }
 }
 
 #[derive(Template)]
@@ -26,6 +82,28 @@ pub struct PostPage {
     pub path: Cow<'static, str>,
     pub post: Rc<Post>,
     pub navbar: NavigationBar,
+}
+
+impl PostPage {
+    pub fn new(post: &Rc<Post>) -> Result<PostPage> {
+        let base = PostPage {
+            title: post.title.clone(),
+            description: post.description.clone(),
+            path: Cow::Owned(format!("out/{}", post.path)),
+            navbar: NavigationBar::new(),
+            post: Rc::clone(post),
+        };
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(&*base.path)?;
+        file.write_all(base.render()?.as_bytes())?;
+        file.flush()?;
+
+        Ok(base)
+    }
 }
 
 #[derive(Template)]
