@@ -6,10 +6,15 @@ use std::borrow::Cow;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::rc::Rc;
+use const_format::concatcp;
 use tracing_subscriber::FmtSubscriber;
 
 mod elements;
 
+const OUT_DIR: &str = "docs/";
+const HOMEPAGE_PATH: &str = concatcp!(OUT_DIR, "index.html");
+const POST_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts.html");
+const PROJECT_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts/projects.html");
 
 fn collect_markdown_posts(path_prefix: &str) -> Vec<Rc<Post>> {
     let mut posts: Vec<Rc<Post>> = Vec::new();
@@ -71,7 +76,7 @@ fn main() {
         .create(true)
         .write(true)
         .truncate(true)
-        .open("out/index.html")
+        .open(HOMEPAGE_PATH)
         .unwrap();
     home_page_file
         .write_all(home_page.render().unwrap().as_bytes())
@@ -94,7 +99,7 @@ fn main() {
         .create(true)
         .write(true)
         .truncate(true)
-        .open("out/posts.html")
+        .open(POST_LISTING_PATH)
         .unwrap();
     posts_page_file
         .write_all(posts_page.render().unwrap().as_bytes())
@@ -116,7 +121,7 @@ fn main() {
         .create(true)
         .write(true)
         .truncate(true)
-        .open("out/posts/projects.html")
+        .open(PROJECT_LISTING_PATH)
         .unwrap();
     project_page_file
         .write_all(projects_page.render().unwrap().as_bytes())

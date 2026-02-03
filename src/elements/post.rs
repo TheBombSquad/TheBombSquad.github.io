@@ -89,7 +89,7 @@ impl PostPage {
         let base = PostPage {
             title: post.title.clone(),
             description: post.description.clone(),
-            path: Cow::Owned(format!("out/{}", post.path)),
+            path: Cow::Owned(format!("docs/{}", post.path)), // TODO: use const in main
             navbar: NavigationBar::new(),
             post: Rc::clone(post),
         };
