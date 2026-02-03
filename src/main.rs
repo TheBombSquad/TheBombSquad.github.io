@@ -10,16 +10,11 @@ use tracing_subscriber::FmtSubscriber;
 
 mod elements;
 
-fn main() {
-    // Logging
-    let tracing_subscriber = FmtSubscriber::new();
-    tracing::subscriber::set_global_default(tracing_subscriber)
-        .expect("setting tracing default failed");
 
-    // Collate Markdown posts
+fn collect_markdown_posts(path_prefix: &str) -> Vec<Rc<Post>> {
     let mut posts: Vec<Rc<Post>> = Vec::new();
 
-    if let Ok(post_files) = std::fs::read_dir("posts") {
+    if let Ok(post_files) = std::fs::read_dir(path_prefix) {
         for entry in post_files {
             let entry = entry.unwrap();
             let path = entry.path();
@@ -46,7 +41,18 @@ fn main() {
     // Sort posts from newest to oldest
     posts.sort_by(|a, b| b.date.cmp(&a.date));
 
-    let recent_posts = posts
+    posts
+}
+fn main() {
+    // Logging
+    let tracing_subscriber = FmtSubscriber::new();
+    tracing::subscriber::set_global_default(tracing_subscriber)
+        .expect("setting tracing default failed");
+
+    // Blog posts
+    let blog_posts = collect_markdown_posts("posts");
+
+    let recent_blog_posts = blog_posts
         .iter()
         .filter(|x| !x.has_tag("_no-index"))
         .take(5)
@@ -58,7 +64,7 @@ fn main() {
         title: Cow::Borrowed("Home"),
         description: Cow::Borrowed("bombsquad.dev"),
         navbar: NavigationBar::new(),
-        recent_posts,
+        recent_posts: recent_blog_posts,
     };
 
     let mut home_page_file = OpenOptions::new()
@@ -77,7 +83,7 @@ fn main() {
         title: Cow::Borrowed("Posts"),
         description: Cow::Borrowed("All posts"),
         navbar: NavigationBar::new(),
-        posts: posts
+        posts: blog_posts
             .iter()
             .filter(|x| !x.has_tag("_no-index"))
             .cloned()
@@ -95,9 +101,31 @@ fn main() {
         .unwrap();
     posts_page_file.flush().unwrap();
 
+
+    // Projects
+    let projects = collect_markdown_posts("posts/projects");
+
+    let projects_page = PostListingPage {
+        title: Cow::Borrowed("Projects"),
+        description: Cow::Borrowed("All projects"),
+        navbar: NavigationBar::new(),
+        posts: projects.clone()
+    };
+
+    let mut project_page_file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open("out/posts/projects.html")
+        .unwrap();
+    project_page_file
+        .write_all(projects_page.render().unwrap().as_bytes())
+        .unwrap();
+    project_page_file.flush().unwrap();
+
     // Actually create the pages
-    for post in posts {
-        let page_creation = PostPage::new(&post);
+    for post in blog_posts.iter().chain(projects.iter()) {
+        let page_creation = PostPage::new(post);
         match page_creation {
             Ok(page) => {
                 tracing::info!("Created page {:?}", page.path);

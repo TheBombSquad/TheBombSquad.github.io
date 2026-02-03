@@ -56,10 +56,10 @@ impl Post {
         let post_content_body =
             markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
 
-        let post_path = match post_creation_date {
-            Some(date) => format!("posts/{}.html", date.format("%Y-%m-%d")),
-            None => format!("posts/{}.html", post_title.to_ascii_lowercase()),
-        };
+        let post_path = path
+            .with_extension("html")
+            .to_string_lossy()
+            .into_owned();
 
         let post = Post {
             title: Cow::Owned(post_title),
