@@ -1,0 +1,61 @@
+@font-face {
+    font-family: "Terminus";
+    src: url(terminus.otf);
+}
+
+@font-face {
+  font-family: 'NEC-AP3-8x16';
+  src: url(Web437_NEC_APC3_8x16.woff) format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+    font-family: 'NEC-AP3-8x8';
+    src: url(Web437_NEC_APC3_8x8.woff) format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.root, [data-bs-theme="dark"] {
+    --bs-body-bg: #161617;
+    --bs-body-color: #ffbf00;
+
+    --bs-primary-rgb: #ffbf00;
+
+    --bs-link-hover-color: #ffff00;
+    --bs-nav-link-hover-color: #ffff00;
+
+    --bs-link-color: #b38600;
+
+    --bs-font-sans-serif: NEC-AP3-8x16, system-ui;
+    --bs-font-monospace: Terminus;
+}
+:root {
+}
+
+blockquote {
+    border-left: yellow 4px solid;
+    padding-left: 12px;
+}
+
+header {
+    padding: .50rem 0;
+}
+
+footer {
+    padding: .50rem 0;
+}
+
+p {
+    max-width: 80ch;
+}
+
+body {
+    text-shadow: .1rem .1rem 0 rgba(127, 95, 0, .5);
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
