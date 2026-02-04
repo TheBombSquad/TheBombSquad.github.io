@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="container border text-center pt-3">
+    <div class="mx-auto" style="max-width: 80ch;">
+        <h3><b>Latest posts...</b></h3>
+    </div>
+</div>
 {%- for post in recent_posts %}
-{% include "post-body.html" %}
+{% include "post-preview.html" %}
 {%- endfor %}
 {% endblock %}

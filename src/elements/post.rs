@@ -17,7 +17,10 @@ pub struct Post {
     pub path: Cow<'static, str>,
     pub date: Option<NaiveDate>,
     pub tags: Vec<Cow<'static, str>>,
+    pub preview: Cow<'static, str>,
 }
+
+const PREVIEW_CHAR_LIMIT: usize = 300;
 
 impl Post {
     pub fn has_tag(&self, tag: &str) -> bool {
@@ -25,6 +28,7 @@ impl Post {
     }
 
     pub fn new(path: &Path) -> Result<Self> {
+        // Parse front matter
         let matter = Matter::<YAML>::new();
 
         let post_content_raw = &std::fs::read_to_string(path)?;
@@ -53,6 +57,17 @@ impl Post {
             }
         }
 
+        // Preview is just before the first line break
+        let first_line_break = post_content.find('\n');
+
+        let truncated = match (first_line_break) {
+            Some(idx) => post_content[..idx].to_string(),
+            None => post_content.clone()
+        };
+
+        let post_content_preview = markdown::to_html_with_options(&truncated, &markdown::Options::gfm()).unwrap();
+
+        // Parse the actual post content
         let post_content_body =
             markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
 
@@ -66,6 +81,7 @@ impl Post {
             description: Cow::Owned(post_description),
             path: Cow::Owned(post_path),
             body: Cow::Owned(post_content_body),
+            preview: Cow::Owned(post_content_preview),
             date: post_creation_date,
             tags: post_tags,
         };
