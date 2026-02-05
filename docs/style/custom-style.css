@@ -75,6 +75,7 @@ p {
 
 body {
     text-shadow: .1rem .1rem 0 rgba(118, 88, 0, .5);
+    position: relative;
 }
 
 html {
@@ -87,7 +88,7 @@ Scanline effect
  */
 body::before {
     content: "";
-    position: fixed;
+    position: absolute;
     inset: 0;
     pointer-events: none;
     background: repeating-linear-gradient(
