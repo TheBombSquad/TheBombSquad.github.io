@@ -3,6 +3,7 @@ use crate::elements::navbar::NavigationBar;
 use crate::elements::post::{Post, PostListingPage, PostPage};
 use askama::Template;
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::rc::Rc;
@@ -15,6 +16,7 @@ const OUT_DIR: &str = "docs/";
 const HOMEPAGE_PATH: &str = concatcp!(OUT_DIR, "index.html");
 const POST_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts.html");
 const PROJECT_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts/projects.html");
+const TAGS_DIR: &str = concatcp!(OUT_DIR, "tags");
 
 fn clean_output_dir(path: &str) {
     tracing::info!("Cleaning up: {}", path);
@@ -50,10 +52,8 @@ fn collect_markdown_posts(path_prefix: &str) -> Vec<Rc<Post>> {
                         tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err);
                     }
                 }
-            } else {
-                if path.is_file() {
-                    tracing::warn!("Skipping non-markdown file {:?}", path);
-                }
+            } else if path.is_file() {
+                tracing::warn!("Skipping non-markdown file {:?}", path);
             }
         }
     }
@@ -63,27 +63,14 @@ fn collect_markdown_posts(path_prefix: &str) -> Vec<Rc<Post>> {
 
     posts
 }
-fn main() {
-    // Logging
-    let tracing_subscriber = FmtSubscriber::new();
-    tracing::subscriber::set_global_default(tracing_subscriber)
-        .expect("setting tracing default failed");
 
-    // Clean up old/removed posts
-    clean_output_dir(concatcp!(OUT_DIR, "posts"));
-    clean_output_dir(concatcp!(OUT_DIR, "posts/projects"));
-
-    // Blog posts
-    let blog_posts = collect_markdown_posts("posts");
-
+fn build_home_page(blog_posts: &[Rc<Post>]) {
     let recent_blog_posts = blog_posts
         .iter()
         .filter(|x| !x.has_tag("_no-index"))
         .take(5)
         .cloned()
         .collect::<Vec<Rc<Post>>>();
-
-    // Home page
     let home_page = HomePage {
         title: Cow::Borrowed("Home"),
         description: Cow::Borrowed("bombsquad.dev"),
@@ -101,8 +88,9 @@ fn main() {
         .write_all(home_page.render().unwrap().as_bytes())
         .unwrap();
     home_page_file.flush().unwrap();
+}
 
-    // Posts listing page
+fn build_full_post_listing(blog_posts: &[Rc<Post>]) {
     let posts_page = PostListingPage {
         title: Cow::Borrowed("Posts"),
         description: Cow::Borrowed("All posts"),
@@ -124,16 +112,14 @@ fn main() {
         .write_all(posts_page.render().unwrap().as_bytes())
         .unwrap();
     posts_page_file.flush().unwrap();
+}
 
-
-    // Projects
-    let projects = collect_markdown_posts("posts/projects");
-
+fn build_project_listing(projects: &[Rc<Post>]) {
     let projects_page = PostListingPage {
         title: Cow::Borrowed("Projects"),
         description: Cow::Borrowed("All projects"),
         navbar: NavigationBar::new(),
-        posts: projects.clone()
+        posts: projects.to_vec()
     };
 
     let mut project_page_file = OpenOptions::new()
@@ -146,8 +132,79 @@ fn main() {
         .write_all(projects_page.render().unwrap().as_bytes())
         .unwrap();
     project_page_file.flush().unwrap();
+}
 
-    // Actually create the pages
+fn build_tag_listing_pages(blog_posts: &[Rc<Post>]) {
+    let mut tag_map: HashMap<&str, Vec<Rc<Post>>> = HashMap::new();
+
+    blog_posts
+        .iter()
+        .filter(|x| !x.has_tag("_no-index"))
+        .for_each(|post| {
+            post.tags.iter().for_each(|tag| {
+                let new_entry = tag_map.entry(tag).or_default();
+                new_entry.push(Rc::clone(post));
+            });
+        });
+
+    for (tag, posts) in tag_map {
+        let tag_page = PostListingPage {
+            title: Cow::Owned(format!("Posts tagged {tag}")),
+            description: Cow::Owned(format!("Posts tagged {tag}")),
+            navbar: NavigationBar::new(),
+            posts,
+        };
+
+        let tag_path = format!("{TAGS_DIR}/{tag}.html");
+
+        if let Some(parent) = std::path::Path::new(&tag_path).parent() {
+            std::fs::create_dir_all(parent).unwrap();
+        }
+
+        let mut tag_page_file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(&tag_path)
+            .unwrap();
+        tag_page_file
+            .write_all(tag_page.render().unwrap().as_bytes())
+            .unwrap();
+        tag_page_file.flush().unwrap();
+
+        tracing::info!("Created page {:?}", tag_path);
+    }
+}
+
+fn main() {
+    // Logging
+    let tracing_subscriber = FmtSubscriber::new();
+    tracing::subscriber::set_global_default(tracing_subscriber)
+        .expect("setting tracing default failed");
+
+    // Clean up old/removed posts
+    clean_output_dir(concatcp!(OUT_DIR, "posts"));
+    clean_output_dir(concatcp!(OUT_DIR, "posts/projects"));
+    clean_output_dir(TAGS_DIR);
+
+    // Blog posts
+    let blog_posts = collect_markdown_posts("posts");
+
+
+    // Home page
+    build_home_page(&blog_posts);
+
+    // Posts listing page
+    build_full_post_listing(&blog_posts);
+
+    // Projects
+    let projects = collect_markdown_posts("posts/projects");
+    build_project_listing(&projects);
+
+    // Tag->post listing page
+    build_tag_listing_pages(&blog_posts);
+
+    // Render the rest of the pages
     for post in blog_posts.iter().chain(projects.iter()) {
         let page_creation = PostPage::new(post);
         match page_creation {

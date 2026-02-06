@@ -16,15 +16,17 @@ pub struct Post {
     pub body: Cow<'static, str>,
     pub path: PathBuf,
     pub date: Option<NaiveDate>,
-    pub tags: Vec<Cow<'static, str>>,
+    pub tags: Vec<String>,
     pub preview: Cow<'static, str>,
 }
 
-const PREVIEW_CHAR_LIMIT: usize = 300;
-
 impl Post {
     pub fn has_tag(&self, tag: &str) -> bool {
-        self.tags.contains(&Cow::Borrowed(tag))
+        self.tags.iter().any(|t| t == tag)
+    }
+
+    pub fn get_tag_page_path(&self, tag: &str) -> String {
+        format!("/tags/{tag}.html")
     }
 
     // Strictly for template use - askama does not like it when we pass in a PathBuf/Path.
@@ -58,14 +60,14 @@ impl Post {
         let mut post_tags = Vec::new();
         if let Ok(post_tags_raw) = post_matter["tags"].as_vec() {
             for tag in post_tags_raw {
-                post_tags.push(Cow::Owned(tag.as_string()?));
+                post_tags.push(tag.as_string()?);
             }
         }
 
         // Preview is just before the first line break
         let first_line_break = post_content.find('\n');
 
-        let truncated = match (first_line_break) {
+        let truncated = match first_line_break {
             Some(idx) => post_content[..idx].to_string(),
             None => post_content.clone()
         };

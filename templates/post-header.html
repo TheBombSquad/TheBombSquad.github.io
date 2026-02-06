@@ -9,7 +9,7 @@
         {%- if post.tags.len() > 0 %}
         {%- for tag in post.tags %}
         {%- if !tag.starts_with("_")  %}
-        <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ tag }}&nbsp</span>
+        <a href="{{ post.get_tag_page_path(tag) }}" class="border rounded-5 text-bg-dark text-primary text-decoration-none">&nbsp{{ tag }}&nbsp</a>
         {%- endif %}
         {%- endfor %}
         {%- endif %}
