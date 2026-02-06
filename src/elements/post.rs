@@ -69,10 +69,11 @@ impl Post {
 
         let truncated = match first_line_break {
             Some(idx) => post_content[..idx].to_string(),
-            None => post_content.clone()
+            None => post_content.clone(),
         };
 
-        let post_content_preview = markdown::to_html_with_options(&truncated, &markdown::Options::gfm()).unwrap();
+        let post_content_preview =
+            markdown::to_html_with_options(&truncated, &markdown::Options::gfm()).unwrap();
 
         // Parse the actual post content
         let post_content_body =

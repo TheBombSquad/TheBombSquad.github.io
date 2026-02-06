@@ -2,12 +2,12 @@ use crate::elements::home::HomePage;
 use crate::elements::navbar::NavigationBar;
 use crate::elements::post::{Post, PostListingPage, PostPage};
 use askama::Template;
+use const_format::concatcp;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::rc::Rc;
-use const_format::concatcp;
 use tracing_subscriber::FmtSubscriber;
 
 mod elements;
@@ -119,7 +119,7 @@ fn build_project_listing(projects: &[Rc<Post>]) {
         title: Cow::Borrowed("Projects"),
         description: Cow::Borrowed("All projects"),
         navbar: NavigationBar::new(),
-        posts: projects.to_vec()
+        posts: projects.to_vec(),
     };
 
     let mut project_page_file = OpenOptions::new()
@@ -189,7 +189,6 @@ fn main() {
 
     // Blog posts
     let blog_posts = collect_markdown_posts("posts");
-
 
     // Home page
     build_home_page(&blog_posts);
