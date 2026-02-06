@@ -1,13 +1,14 @@
 ---
-title: The title of the post.
-description: A description of the post!
+title: Template post
+description: A super secret template post.
 date: 2026-01-27
 tags:
-    - tag1
-    - tag2
+  - _no-index
 ---
 
-This is a post. There's text in it. Isn't that cool?
+This is a top-secret template post. There's text in it. Isn't that cool?
+Anything before the first double newline will get hidden behind the 'read more'
+link. Oh, make sure to add the `_no-index` tag to this post!
 
 Need more than one space for a line break. However, the 80 character limit is
 still in effect.
@@ -41,5 +42,3 @@ def bar():
 | Paragraph | Text | 
 
 This is a test of ~~strikethrough~~.
-
-This is a test of.. uh.. ==highlighting==? No, that doesn't work.

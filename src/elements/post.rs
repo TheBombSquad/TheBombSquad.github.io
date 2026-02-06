@@ -64,8 +64,8 @@ impl Post {
             }
         }
 
-        // Preview is just before the first line break
-        let first_line_break = post_content.find('\n');
+        // Preview is just before the first paragraph break
+        let first_line_break = post_content.find("\n\n");
 
         let truncated = match first_line_break {
             Some(idx) => post_content[..idx].to_string(),
