@@ -16,6 +16,19 @@ const HOMEPAGE_PATH: &str = concatcp!(OUT_DIR, "index.html");
 const POST_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts.html");
 const PROJECT_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts/projects.html");
 
+fn clean_output_dir(path: &str) {
+    tracing::info!("Cleaning up: {}", path);
+    if let Ok(dirs) = std::fs::read_dir(path) {
+        for entry in dirs.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                tracing::info!("Removed page {:?}", path);
+                std::fs::remove_file(&path).unwrap();
+            }
+        }
+    }
+}
+
 fn collect_markdown_posts(path_prefix: &str) -> Vec<Rc<Post>> {
     let mut posts: Vec<Rc<Post>> = Vec::new();
 
@@ -38,7 +51,9 @@ fn collect_markdown_posts(path_prefix: &str) -> Vec<Rc<Post>> {
                     }
                 }
             } else {
-                tracing::warn!("Skipping non-markdown file {:?}", path);
+                if path.is_file() {
+                    tracing::warn!("Skipping non-markdown file {:?}", path);
+                }
             }
         }
     }
@@ -53,6 +68,10 @@ fn main() {
     let tracing_subscriber = FmtSubscriber::new();
     tracing::subscriber::set_global_default(tracing_subscriber)
         .expect("setting tracing default failed");
+
+    // Clean up old/removed posts
+    clean_output_dir(concatcp!(OUT_DIR, "posts"));
+    clean_output_dir(concatcp!(OUT_DIR, "posts/projects"));
 
     // Blog posts
     let blog_posts = collect_markdown_posts("posts");

@@ -7,14 +7,14 @@ use gray_matter::{Matter, ParsedEntity};
 use std::borrow::Cow;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 pub struct Post {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
     pub body: Cow<'static, str>,
-    pub path: Cow<'static, str>,
+    pub path: PathBuf,
     pub date: Option<NaiveDate>,
     pub tags: Vec<Cow<'static, str>>,
     pub preview: Cow<'static, str>,
@@ -25,6 +25,11 @@ const PREVIEW_CHAR_LIMIT: usize = 300;
 impl Post {
     pub fn has_tag(&self, tag: &str) -> bool {
         self.tags.contains(&Cow::Borrowed(tag))
+    }
+
+    // Strictly for template use - askama does not like it when we pass in a PathBuf/Path.
+    pub fn get_path_str(&self) -> String {
+        self.path.to_string_lossy().to_string()
     }
 
     pub fn new(path: &Path) -> Result<Self> {
@@ -71,15 +76,12 @@ impl Post {
         let post_content_body =
             markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
 
-        let post_path = path
-            .with_extension("html")
-            .to_string_lossy()
-            .into_owned();
+        let post_path = path.with_extension("html");
 
         let post = Post {
             title: Cow::Owned(post_title),
             description: Cow::Owned(post_description),
-            path: Cow::Owned(post_path),
+            path: post_path,
             body: Cow::Owned(post_content_body),
             preview: Cow::Owned(post_content_preview),
             date: post_creation_date,
@@ -95,7 +97,7 @@ impl Post {
 pub struct PostPage {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
-    pub path: Cow<'static, str>,
+    pub path: PathBuf,
     pub post: Rc<Post>,
     pub navbar: NavigationBar,
 }
@@ -105,16 +107,20 @@ impl PostPage {
         let base = PostPage {
             title: post.title.clone(),
             description: post.description.clone(),
-            path: Cow::Owned(format!("docs/{}", post.path)), // TODO: use const in main
+            path: PathBuf::from("docs").join(&post.path), // TODO: use const in main
             navbar: NavigationBar::new(),
             post: Rc::clone(post),
         };
+
+        if let Some(parent) = base.path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
 
         let mut file = OpenOptions::new()
             .create(true)
             .write(true)
             .truncate(true)
-            .open(&*base.path)?;
+            .open(&base.path)?;
         file.write_all(base.render()?.as_bytes())?;
         file.flush()?;
 
