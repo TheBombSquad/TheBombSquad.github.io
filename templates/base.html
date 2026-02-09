@@ -9,12 +9,13 @@
     <link href="/style/custom-style.css" type="text/css" rel="stylesheet">
     <meta name="theme-color" content="#712cf9">
 </head>
-<header>
-{{ navbar|safe }}
-</header>
 <body>
+<header>
+    {{ navbar|safe }}
+</header>
+<main>
 {% block content %}{% endblock %}
-</body>
+</main>
 <footer>
     <div class="container border text-center pt-3">
         <div class="mx-auto" style="max-width: 80ch;">
@@ -22,4 +23,5 @@
         </div>
     </div>
 </footer>
+</body>
 </html>

@@ -1,10 +1,8 @@
 <div class="container border text-center pt-3">
-  <p class="h1"><b>bombsquad.dev</b></p>
-  <nav class ="nav justify-content-center">
-    {%- for element in elements %}
-    <li class="nav-item">
-      <a class="nav-link" href="{{element.path}}">{{element.name}}</a>
-    </li>
-    {%- endfor %}
-  </nav>
+    <p class="h1"><b>bombsquad.dev</b></p>
+    <nav class ="nav justify-content-center">
+        {%- for element in elements %}
+        <a class="nav-link" href="{{element.path}}">{{element.name}}</a>
+        {%- endfor %}
+    </nav>
 </div>

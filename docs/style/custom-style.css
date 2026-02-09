@@ -73,6 +73,11 @@ p {
     max-width: 80ch;
 }
 
+ul {
+    list-style-type: none;
+    display: flex;
+}
+
 body {
     text-shadow: .1rem .1rem 0 rgba(118, 88, 0, .5);
     position: relative;
