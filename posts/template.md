@@ -4,41 +4,101 @@ description: A super secret template post.
 date: 2026-01-27
 tags:
   - _no-index
+header_image: /images/test_dragon128.png
 ---
 
 This is a top-secret template post. There's text in it. Isn't that cool?
 Anything before the first double newline will get hidden behind the 'read more'
 link. Oh, make sure to add the `_no-index` tag to this post!
 
-Need more than one space for a line break. However, the 80 character limit is
-still in effect.
+---
 
-Anyways, sometimes text can be *italicized* or **bold**.
+Standard text!
+*Italic text!*
+**Bold text!**
+***Bold italic text!***
+~~Strikethrough.~~
 
-> Sometimes we are quoting things.
-> 
-> Sometimes quotes are multiple lines.
+It's a\
+test here.
 
-And here's a list:
-1. Entry number one
-2. Entry number two
-3. Entry number three
+## Headings
 
-And here's a code block:
-```python
-def foo():
-    print("Hello, world!")
-    print("Hello, world!")
-    print("Hello, world!")
-    print("Hello, world!")
-    print("Hello, world!")
-def bar():
-    print(2+2)
+# **H1 - bombsquad.dev**
+# H1 - bombsquad.dev
+## **H2 - bombsquad.dev**
+## H2 - bombsquad.dev
+### **H3 - bombsquad.dev**
+### H3 - bombsquad.dev
+#### **H4 - bombsquad.dev**
+#### H4 - bombsquad.dev
+##### **H5 - bombsquad.dev**
+##### H5 - bombsquad.dev
+###### **H6 - bombsquad.dev**
+###### H6 - bombsquad.dev
+
+
+## Code blocks
+
+Inline code: `let x = 1 + 2;` and escaped characters: \*literal asterisks\*.
+
+```
+def function():
+    do_a_thing();
+end
 ```
 
-| Syntax | Description |
-| ----------- | ----------- |
-| Header | Title |
-| Paragraph | Text | 
+## Links
 
-This is a test of ~~strikethrough~~.
+Inline link: [Test](https:/example.com "Test link")
+
+Reference link: [Reference link test][ref-link]
+
+Autolink: https://example.com/test
+
+[ref-link]: https://www.google.com "Google"
+
+## Images
+
+Inline image: ![Placeholder image](/images/test_dragon128.png "Placeholder")
+
+![Test](/images/screenshot-test.png)This is a test.
+![Test](/images/screenshot-test2.png)
+
+## Task lists
+
+- [ ] Unchecked item
+- [x] Checked item
+
+## Mixed and nested lists
+
+- Unordered item
+  - Nested item
+    1. Nested ordered item
+    2. Nested ordered item
+- Unordered item
+
+1. Ordered item
+   - Nested unordered item
+   - Nested unordered item
+
+## Block quote with list
+
+> Quoted text
+> - Quoted list item
+> - Quoted list item
+
+## Table
+
+| Left | Center | Right |
+| :--- | :----: | ----: |
+| L1   | C1     | R1    |
+| L2   | C2     | R2    |
+
+
+## Footnote test
+
+Here is a sentence with a footnote reference.[^note1] Another.[^note2]
+
+[^note1]: Footnote here.
+[^note2]: Footnote with *italics* and `inline code`.

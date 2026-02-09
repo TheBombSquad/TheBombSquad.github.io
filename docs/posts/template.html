@@ -22,65 +22,131 @@
 </div>
 </header>
 <main>
-
 <div class="container border">
     <div class="mx-auto" style="max-width: 80ch;">
-        <div class="mx-auto" style="max-width: 80ch;">
-    <p class="h3 pt-3 mb-0">
-        <a href="/posts/template.html" class="nav-link"><b>Template post</b></a>
-    </p>
-    <p>
-        <span class="border rounded-5 text-bg-dark text-primary">&nbsp2026-01-27&nbsp</span>
-    </p>
+        <div class="mx-auto d-flex align-items-center gap-2" style="max-width: 80ch;">
+    <div class="border bg-dark d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+        <img src="/images/test_dragon128.png" alt="" class="position-relative" style="width: 48px; height: 48px; object-fit: scale-down; z-index: 102;" />
+    </div>
+    <div class="flex-grow-1" style="min-width: 0;">
+        <p class="h3 pt-3 mb-0">
+            <a href="/posts/template.html" class="nav-link"><b>Template post</b></a>
+        </p>
+        <p>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp2026-01-27&nbsp</span>
+        </p>
+    </div>
 </div>
-        <p><p>This is a top-secret template post. There's text in it. Isn't that cool?
+        <p>This is a top-secret template post. There's text in it. Isn't that cool?
 Anything before the first double newline will get hidden behind the 'read more'
 link. Oh, make sure to add the <code>_no-index</code> tag to this post!</p>
-<p>Need more than one space for a line break. However, the 80 character limit is
-still in effect.</p>
-<p>Anyways, sometimes text can be <em>italicized</em> or <strong>bold</strong>.</p>
-<blockquote>
-<p>Sometimes we are quoting things.</p>
-<p>Sometimes quotes are multiple lines.</p>
-</blockquote>
-<p>And here's a list:</p>
-<ol>
-<li>Entry number one</li>
-<li>Entry number two</li>
-<li>Entry number three</li>
-</ol>
-<p>And here's a code block:</p>
-<pre><code class="language-python">def foo():
-    print(&quot;Hello, world!&quot;)
-    print(&quot;Hello, world!&quot;)
-    print(&quot;Hello, world!&quot;)
-    print(&quot;Hello, world!&quot;)
-    print(&quot;Hello, world!&quot;)
-def bar():
-    print(2+2)
+<hr />
+<p>Standard text!
+<em>Italic text!</em>
+<strong>Bold text!</strong>
+<em><strong>Bold italic text!</strong></em>
+<del>Strikethrough.</del></p>
+<p>It's a<br />
+test here.</p>
+<h2>Headings</h2>
+<h1><strong>H1 - bombsquad.dev</strong></h1>
+<h1>H1 - bombsquad.dev</h1>
+<h2><strong>H2 - bombsquad.dev</strong></h2>
+<h2>H2 - bombsquad.dev</h2>
+<h3><strong>H3 - bombsquad.dev</strong></h3>
+<h3>H3 - bombsquad.dev</h3>
+<h4><strong>H4 - bombsquad.dev</strong></h4>
+<h4>H4 - bombsquad.dev</h4>
+<h5><strong>H5 - bombsquad.dev</strong></h5>
+<h5>H5 - bombsquad.dev</h5>
+<h6><strong>H6 - bombsquad.dev</strong></h6>
+<h6>H6 - bombsquad.dev</h6>
+<h2>Code blocks</h2>
+<p>Inline code: <code>let x = 1 + 2;</code> and escaped characters: *literal asterisks*.</p>
+<pre><code>def function():
+    do_a_thing();
+end
 </code></pre>
+<h2>Links</h2>
+<p>Inline link: <a href="https:/example.com" title="Test link">Test</a></p>
+<p>Reference link: <a href="https://www.google.com" title="Google">Reference link test</a></p>
+<p>Autolink: <a href="https://example.com/test">https://example.com/test</a></p>
+<h2>Images</h2>
+<p>Inline image: <img src="/images/test_dragon128.png" alt="Placeholder image" title="Placeholder" /></p>
+<p><img src="/images/screenshot-test.png" alt="Test" />This is a test.
+<img src="/images/screenshot-test2.png" alt="Test" /></p>
+<h2>Task lists</h2>
+<ul>
+<li><input type="checkbox" disabled="" /> Unchecked item</li>
+<li><input type="checkbox" disabled="" checked="" /> Checked item</li>
+</ul>
+<h2>Mixed and nested lists</h2>
+<ul>
+<li>Unordered item
+<ul>
+<li>Nested item
+<ol>
+<li>Nested ordered item</li>
+<li>Nested ordered item</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>Unordered item</li>
+</ul>
+<ol>
+<li>Ordered item
+<ul>
+<li>Nested unordered item</li>
+<li>Nested unordered item</li>
+</ul>
+</li>
+</ol>
+<h2>Block quote with list</h2>
+<blockquote>
+<p>Quoted text</p>
+<ul>
+<li>Quoted list item</li>
+<li>Quoted list item</li>
+</ul>
+</blockquote>
+<h2>Table</h2>
 <table>
 <thead>
 <tr>
-<th>Syntax</th>
-<th>Description</th>
+<th align="left">Left</th>
+<th align="center">Center</th>
+<th align="right">Right</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Header</td>
-<td>Title</td>
+<td align="left">L1</td>
+<td align="center">C1</td>
+<td align="right">R1</td>
 </tr>
 <tr>
-<td>Paragraph</td>
-<td>Text</td>
+<td align="left">L2</td>
+<td align="center">C2</td>
+<td align="right">R2</td>
 </tr>
 </tbody>
 </table>
-<p>This is a test of <del>strikethrough</del>.</p></p>
+<h2>Footnote test</h2>
+<p>Here is a sentence with a footnote reference.<sup><a href="#user-content-fn-note1" id="user-content-fnref-note1" data-footnote-ref="" aria-describedby="footnote-label">1</a></sup> Another.<sup><a href="#user-content-fn-note2" id="user-content-fnref-note2" data-footnote-ref="" aria-describedby="footnote-label">2</a></sup></p>
+<section data-footnotes="" class="footnotes"><h2 id="footnote-label" class="sr-only">Footnotes</h2>
+<ol>
+<li id="user-content-fn-note1">
+<p>Footnote here. <a href="#user-content-fnref-note1" data-footnote-backref="" aria-label="Back to content" class="data-footnote-backref">↩</a></p>
+</li>
+<li id="user-content-fn-note2">
+<p>Footnote with <em>italics</em> and <code>inline code</code>. <a href="#user-content-fnref-note2" data-footnote-backref="" aria-label="Back to content" class="data-footnote-backref">↩</a></p>
+</li>
+</ol>
+</section>
+
       </div>
 </div>
-
 </main>
 <footer>
     <div class="container border text-center pt-3">

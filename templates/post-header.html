@@ -1,17 +1,24 @@
-<div class="mx-auto" style="max-width: 80ch;">
-    <p class="h3 pt-3 mb-0">
-        <a href="/{{ post.get_path_str() }}" class="nav-link"><b>{{ post.title }}</b></a>
-    </p>
-    <p>
+<div class="mx-auto d-flex align-items-center gap-2" style="max-width: 80ch;">
+    {%- if let Some(img) = post.header_image_path %}
+    <div class="border bg-dark d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+        <img src="{{ img }}" alt="" class="position-relative" style="width: 48px; height: 48px; object-fit: scale-down; z-index: 102;" />
+    </div>
+    {%- endif %}
+    <div class="flex-grow-1" style="min-width: 0;">
+        <p class="h3 pt-3 mb-0">
+            <a href="/{{ post.get_path_str() }}" class="nav-link"><b>{{ post.title }}</b></a>
+        </p>
         {%- if let Some(date) = post.date %}
-        <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ date }}&nbsp</span>
+        <p>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ date }}&nbsp</span>
+            {%- endif %}
+            {%- if post.tags.len() > 0 %}
+            {%- for tag in post.tags %}
+            {%- if !tag.starts_with("_")  %}
+            <a href="{{ post.get_tag_page_path(tag) }}" class="border rounded-5 text-bg-dark text-primary text-decoration-none">&nbsp{{ tag }}&nbsp</a>
+            {%- endif %}
+            {%- endfor %}
+        </p>
         {%- endif %}
-        {%- if post.tags.len() > 0 %}
-        {%- for tag in post.tags %}
-        {%- if !tag.starts_with("_")  %}
-        <a href="{{ post.get_tag_page_path(tag) }}" class="border rounded-5 text-bg-dark text-primary text-decoration-none">&nbsp{{ tag }}&nbsp</a>
-        {%- endif %}
-        {%- endfor %}
-        {%- endif %}
-    </p>
+    </div>
 </div>

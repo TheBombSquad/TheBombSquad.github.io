@@ -18,6 +18,7 @@ pub struct Post {
     pub date: Option<NaiveDate>,
     pub tags: Vec<String>,
     pub preview: Cow<'static, str>,
+    pub header_image_path: Option<Cow<'static, str>>,
 }
 
 impl Post {
@@ -64,6 +65,12 @@ impl Post {
             }
         }
 
+        let post_header_image = if post_matter.contains_key("header_image") {
+            Some(Cow::Owned(post_matter["header_image"].as_string()?))
+        } else {
+            None
+        };
+
         // Preview is just before the first paragraph break
         let first_line_break = post_content.find("\n\n");
 
@@ -89,6 +96,7 @@ impl Post {
             preview: Cow::Owned(post_content_preview),
             date: post_creation_date,
             tags: post_tags,
+            header_image_path: post_header_image,
         };
 
         Ok(post)
