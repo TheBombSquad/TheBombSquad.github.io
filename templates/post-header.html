@@ -5,7 +5,11 @@
     </div>
     {%- endif %}
     <div class="flex-grow-1" style="min-width: 0;">
+        {%- if post.date.is_some() %}
         <p class="h3 pt-3 mb-0">
+        {%- else %}
+        <p class="h3 pt-3">
+        {%- endif %}
             <a href="/{{ post.get_path_str() }}" class="nav-link"><b>{{ post.title }}</b></a>
         </p>
         {%- if let Some(date) = post.date %}

@@ -1,7 +1,7 @@
 <div class="container border">
     <div class="mx-auto" style="max-width: 80ch;">
         {% include "post-header.html" %}
-        <p>{{ post.preview }}</p>
-        <p><a href="/{{ post.get_path_str() }}" class="nav-link">read more</a></p>
+        {{ post.preview }}
+        <p><a href="/{{ post.get_path_str() }}">read more</a></p>
     </div>
 </div>
