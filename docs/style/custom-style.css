@@ -40,15 +40,27 @@ Shades of amber:
 }
 
 .root, [data-bs-theme="dark"] {
-    --bs-body-bg: #161616;
-    --bs-body-color: #ffbf00;
+    --color-amber-50: #fff8f1;
+    --color-amber-100: #fff2e2;
+    --color-amber-200: #ffe4c1;
+    --color-amber-300: #ffdaa5;
+    --color-amber-400: #ffcd76;
+    --color-amber-500: #ffbf00;
+    --color-amber-600: #c99600;
+    --color-amber-700: #956e00;
+    --color-amber-800: #624700;
+    --color-amber-900: #352500;
+    --color-amber-950: #211600;
 
-    --bs-primary-rgb: #ffbf00;
+    --bs-body-bg: var(--color-amber-950);
+    --bs-body-color: var(--color-amber-500);
 
-    --bs-link-hover-color: #ffff00;
-    --bs-nav-link-hover-color: #ffff00;
+    --bs-primary-rgb: var(--color-amber-500);
 
-    --bs-link-color: #b18400;
+    --bs-link-hover-color: var(--color-amber-300);
+    --bs-nav-link-hover-color: var(--color-amber-300);
+
+    --bs-link-color: var(--color-amber-700);
 
     --bs-font-sans-serif: NEC-AP3-8x16, system-ui;
     --bs-font-monospace: Terminus;

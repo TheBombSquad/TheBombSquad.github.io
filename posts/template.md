@@ -4,7 +4,7 @@ description: A super secret template post.
 date: 2026-01-27
 tags:
   - _no-index
-header_image: /images/test_dragon128.png
+header_image: /images/post.png
 ---
 
 This is a top-secret template post. There's text in it. Isn't that cool?
@@ -60,10 +60,7 @@ Autolink: https://example.com/test
 
 ## Images
 
-Inline image: ![Placeholder image](/images/test_dragon128.png "Placeholder")
-
-![Test](/images/screenshot-test.png)This is a test.
-![Test](/images/screenshot-test2.png)
+Inline image: ![Placeholder image](/images/dragon.png "Placeholder")
 
 ## Task lists
 
@@ -87,14 +84,6 @@ Inline image: ![Placeholder image](/images/test_dragon128.png "Placeholder")
 > Quoted text
 > - Quoted list item
 > - Quoted list item
-
-## Table
-
-| Left | Center | Right |
-| :--- | :----: | ----: |
-| L1   | C1     | R1    |
-| L2   | C2     | R2    |
-
 
 ## Footnote test
 
