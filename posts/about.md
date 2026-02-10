@@ -3,31 +3,54 @@ title: About
 description: About bombsquad.dev
 tags:
   - _no-index
+header_image: /images/dragon.png
 ---
 
-I am a software engineer and general nerd about anything related to computers or electronics... and this is my space on the World Wide Web! I go by the username *The BombSquad* in most places online.
+I'm *The BombSquad*, and this is my personal website! (I'm just one person, 
+despite the name!)
 
-Here, you'll find assorted ramblings about topics such as vintage computers, reverse engineering, video game modding, programming, and more. 
+I am a professional software engineer, and general nerd about anything
+related to computers or electronics. I have had the opportunity to work on
+several wonderful games throughout my career, mostly focusing on performance and
+memory optimization. I'm also an avid contributor to the Super Monkey Ball
+modding community.
+
+On this site, you'll find assorted ramblings about topics such as vintage 
+computers, reverse engineering, video game modding, programming, and more. 
+I'll try to post regularly, but I make no promises as to any sort of schedule!
 
 #### Social Media
-I don't use traditional social media platforms often, but you can still find me in these places:
-* Blog: [bombsquad.dev](https://bombsquad.dev)
+I am not a frequent user of traditional social media, but you can still find
+me in these places:
+* Blog (you are here): [bombsquad.dev](https://bombsquad.dev)
 * BlueSky: [@bombsquad.dev](https://bsky.app/profile/bombsquad.dev)
 * Discord: @thebombsquad
 
 #### Other Places
+If you are interested in the development of projects of mine, feel free to check
+out my accounts in these places:
 * GitHub: [TheBombSquad](https://github.com/TheBombSquad)
 * GitLab: [@TheBombSquad](https://gitlab.com/TheBombSquad)
 
 #### This Site
 
-This site was built using my own static site generator written in Rust! I used `askama` for template generation, and `markdown` / `gray_matter` for Markdown parsing. [Bootstrap](https://getbootstrap.com/) was used for CSS styling.
+I wrote the static site generator that built this website in Rust! I used the
+library `askama` for HTML template generation, and the libraries `markdown` and
+`gray_matter` for Markdown parsing. The source code for my generator is
+available [on GitHub!](https://github.com/TheBombSquad/TheBombSquad.github.io)
 
-This website is unfortunately not currently IE5 compatible. I'm working on that. 
+I used [Bootstrap](https://getbootstrap.com/) for CSS/styling. The main font used is
+[NEC APC3 8x16](https://int10h.org/oldschool-pc-fonts/fontlist/font?nec_apc3_8x16), by `VileR`. 
+I also use the [Terminus TTF](https://files.ax86.net/terminus-ttf/) font for code blocks.
 
-Beyond that, I'm striving to keep this website as lightweight and accessible as possible, so don't expect any fancy JavaScript, tracking features, or anything like that. 
+I'm striving to keep this website as lightweight and accessible as possible, so
+don't expect any fancy JavaScript or tracking features.
 
-Why is it so orange? I like amber CRTs!
+What's with the amber color scheme, you might ask? I like amber CRTs!
+I have actually written a few articles for this site on an 8086-compatible
+portable that uses an amber CRT. More information about that hardware coming 
+soon to this site! I find the lack of distractions associated with writing on older
+hardware to be very helpful.
 
 #### Disclaimers
 
