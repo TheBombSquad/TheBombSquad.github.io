@@ -1,7 +1,8 @@
 ---
 title: Rolled Out
-description: A description of the post!
+description: Marble roller from Polarbyte Games, released in 2021
 tags:
+header_image: "/images/ball.png"
 ---
 
 Rolled out! A project! Test!!

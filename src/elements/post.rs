@@ -111,6 +111,7 @@ pub struct PostPage {
     pub path: PathBuf,
     pub post: Rc<Post>,
     pub navbar: NavigationBar,
+    pub show_inline_description: bool,
 }
 
 impl PostPage {
@@ -121,6 +122,7 @@ impl PostPage {
             path: PathBuf::from("docs").join(&post.path), // TODO: use const in main
             navbar: NavigationBar::new(),
             post: Rc::clone(post),
+            show_inline_description: false,
         };
 
         if let Some(parent) = base.path.parent() {
@@ -146,4 +148,5 @@ pub struct PostListingPage {
     pub description: Cow<'static, str>,
     pub posts: Vec<Rc<Post>>,
     pub navbar: NavigationBar,
+    pub show_inline_description: bool,
 }

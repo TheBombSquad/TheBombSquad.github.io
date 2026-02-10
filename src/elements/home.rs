@@ -11,4 +11,5 @@ pub struct HomePage {
     pub description: Cow<'static, str>,
     pub recent_posts: Vec<Rc<Post>>,
     pub navbar: NavigationBar,
+    pub show_inline_description: bool,
 }

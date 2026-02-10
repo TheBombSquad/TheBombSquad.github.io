@@ -10,7 +10,12 @@
         {%- else %}
         <p class="h3 pt-3">
         {%- endif %}
-            <a href="/{{ post.get_path_str() }}" class="nav-link"><b>{{ post.title }}</b></a>
+            <span class="d-inline-flex align-items-baseline gap-2">
+                <a href="/{{ post.get_path_str() }}" class="nav-link d-inline"><b>{{ post.title }}</b></a>
+                {%- if self.show_inline_description %}
+                <span class="h6 d-inline">{{ post.description }}</span>
+                {%- endif %}
+            </span>
         </p>
         {%- if let Some(date) = post.date %}
         <p>

@@ -18,6 +18,10 @@ const POST_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts.html");
 const PROJECT_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts/projects.html");
 const TAGS_DIR: &str = concatcp!(OUT_DIR, "tags");
 
+
+const POSTS_DESCRIPTION: &str = "A listing of all of the posts on this site, sorted by date.";
+const PROJECTS_DESCRIPTION: &str = "A listing of some of the projects I've worked on - in no particular order.";
+
 fn clean_output_dir(path: &str) {
     tracing::info!("Cleaning up: {}", path);
     if let Ok(dirs) = std::fs::read_dir(path) {
@@ -76,6 +80,7 @@ fn build_home_page(blog_posts: &[Rc<Post>]) {
         description: Cow::Borrowed("bombsquad.dev"),
         navbar: NavigationBar::new(),
         recent_posts: recent_blog_posts,
+        show_inline_description: false,
     };
 
     let mut home_page_file = OpenOptions::new()
@@ -93,8 +98,9 @@ fn build_home_page(blog_posts: &[Rc<Post>]) {
 fn build_full_post_listing(blog_posts: &[Rc<Post>]) {
     let posts_page = PostListingPage {
         title: Cow::Borrowed("Posts"),
-        description: Cow::Borrowed("All posts"),
+        description: Cow::Borrowed(POSTS_DESCRIPTION),
         navbar: NavigationBar::new(),
+        show_inline_description: false,
         posts: blog_posts
             .iter()
             .filter(|x| !x.has_tag("_no-index"))
@@ -117,8 +123,9 @@ fn build_full_post_listing(blog_posts: &[Rc<Post>]) {
 fn build_project_listing(projects: &[Rc<Post>]) {
     let projects_page = PostListingPage {
         title: Cow::Borrowed("Projects"),
-        description: Cow::Borrowed("All projects"),
+        description: Cow::Borrowed(PROJECTS_DESCRIPTION),
         navbar: NavigationBar::new(),
+        show_inline_description: true,
         posts: projects.to_vec(),
     };
 
@@ -150,8 +157,9 @@ fn build_tag_listing_pages(blog_posts: &[Rc<Post>]) {
     for (tag, posts) in tag_map {
         let tag_page = PostListingPage {
             title: Cow::Owned(format!("Posts tagged {tag}")),
-            description: Cow::Owned(format!("Posts tagged {tag}")),
+            description: Cow::Owned(format!("Listing of all posts on this website that have been tagged \"{tag}\".")),
             navbar: NavigationBar::new(),
+            show_inline_description: false,
             posts,
         };
 
