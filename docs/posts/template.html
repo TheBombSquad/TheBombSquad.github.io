@@ -22,24 +22,29 @@
 </div>
 </header>
 <main>
-<div class="container border">
+<div class="container border pt-3">
     <div class="mx-auto" style="max-width: 80ch;">
         <div class="mx-auto d-flex align-items-center gap-2" style="max-width: 80ch;">
+    <!-- Image box for posts. (optional) -->
     <div class="border bg-dark d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
         <img src="/images/post.png" alt="" class="position-relative" style="width: 48px; height: 48px; object-fit: scale-down; image-rendering: pixelated;" />
     </div>
-    <div class="flex-grow-1" style="min-width: 0;">
-        <p class="h3 pt-3 mb-0">
+    <!-- Box containing the post title on top, tags on the bottom. -->
+    <div class="flex-grow-1 d-flex flex-column" style="">
+        <!-- Name box, with optional inline description -->
+        <p class="h3 mb-0">
             <span class="d-inline-flex align-items-baseline gap-2">
                 <a href="/posts/template.html" class="nav-link d-inline"><b>Template post</b></a>
             </span>
         </p>
-        <p>
+        <!-- Date / tags -->
+        <span>
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp2026-01-27&nbsp</span>
-        </p>
+            <a href="/tags/test_tag.html" class="border rounded-5 text-bg-dark text-primary text-decoration-none">&nbsptest_tag&nbsp</a>
+        </span>
     </div>
 </div>
-        <p>This is a top-secret template post. There's text in it. Isn't that cool?
+        <div class="pt-3"><p>This is a top-secret template post. There's text in it. Isn't that cool?
 Anything before the first double newline will get hidden behind the 'read more'
 link. Oh, make sure to add the <code>_no-index</code> tag to this post!</p>
 <hr />
@@ -122,8 +127,8 @@ end
 </li>
 </ol>
 </section>
-
-      </div>
+</div>
+    </div>
 </div>
 </main>
 <footer>

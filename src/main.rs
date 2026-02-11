@@ -20,7 +20,7 @@ const TAGS_DIR: &str = concatcp!(OUT_DIR, "tags");
 
 
 const POSTS_DESCRIPTION: &str = "A listing of all of the posts on this site, sorted by date.";
-const PROJECTS_DESCRIPTION: &str = "A listing of some of the projects I've worked on - in no particular order.";
+const PROJECTS_DESCRIPTION: &str = "A listing of some of the projects I've worked on - in no particular order. This list isn't comprehensive!";
 
 fn clean_output_dir(path: &str) {
     tracing::info!("Cleaning up: {}", path);
