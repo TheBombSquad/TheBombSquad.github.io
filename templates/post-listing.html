@@ -8,9 +8,7 @@
     {%- for post in posts %}
     <div class="mx-auto" style="max-width: 80ch;">
         {% include "post-header.html" %}
-        {%- if !loop.last %}
         <hr>
-        {%- endif %}
     </div>
     {%- endfor %}
 </div>

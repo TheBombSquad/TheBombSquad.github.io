@@ -26,6 +26,10 @@ impl Post {
         self.tags.iter().any(|t| t == tag)
     }
 
+    pub fn has_visible_tags(&self) -> bool {
+        self.tags.iter().any(|t| !t.starts_with("_"))
+    }
+
     pub fn get_tag_page_path(&self, tag: &str) -> String {
         format!("/tags/{tag}.html")
     }
