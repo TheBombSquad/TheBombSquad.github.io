@@ -42,7 +42,7 @@ fn collect_markdown_posts(path_prefix: &str) -> Vec<Rc<Post>> {
         for entry in post_files {
             let entry = entry.unwrap();
             let path = entry.path();
-            if path.extension() == Some("md".as_ref()) {
+            if path.extension().is_some() && path.extension().unwrap().eq_ignore_ascii_case("md")  {
                 let post_parse = Post::new(&path);
                 match post_parse {
                     Ok(post) => {
