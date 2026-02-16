@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Making a Y2K-complaint clock update tool - bombsquad.dev</title>
+    <meta name="description" content="A super secret template post.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="/style/custom-style.css" type="text/css" rel="stylesheet">
+    <meta name="theme-color" content="#161616">
+</head>
+<body>
+<header>
+    <div class="container border text-center pt-3">
+    <p class="h1"><b>bombsquad.dev</b></p>
+    <nav class ="nav justify-content-center">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/posts.html">Posts</a>
+        <a class="nav-link" href="/posts/projects.html">Projects</a>
+        <a class="nav-link" href="/posts/about.html">About</a>
+    </nav>
+</div>
+</header>
+<main>
+<div class="container border pt-3">
+    <div class="mx-auto" style="max-width: 80ch;">
+        <div class="mx-auto d-flex align-items-center gap-2" style="max-width: 80ch;">
+    <!-- Image box for posts. (optional) -->
+    <div class="border bg-dark d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+        <img src="/images/post.png" alt="" class="position-relative" style="width: 48px; height: 48px; object-fit: scale-down; image-rendering: pixelated;" />
+    </div>
+    <!-- Box containing the post title on top, tags on the bottom. -->
+    <div class="flex-grow-1 d-flex flex-column" style="">
+        <!-- Name box, with optional inline description -->
+        <p class="h3 mb-0">
+            <span class="d-inline-flex align-items-baseline gap-2">
+                <a href="/posts/CLOCK.html" class="nav-link d-inline"><b>Making a Y2K-complaint clock update tool</b></a>
+            </span>
+        </p>
+        <!-- Date / tags -->
+        <span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp2026-02-12&nbsp</span>
+        </span>
+    </div>
+</div>
+        <div class="pt-3"><p>The Compaq Portable that I've restored comes with a couple of
+after-market additions, one of which is a time &amp; date card from
+[placeholer]. There is barely any information about this card online,
+and the software it came with is all I've got to work with... and it's
+not Y2K-ready! The horror! Well, guess it's time to patch it before
+the next millenium...</p>
+<hr />
+<p>First, some context - the original IBM PC did not come with an
+on-board battery, so users generally resorted to entering the date and
+time every boot. Aftermaket date &amp; time cards became popular as a
+result - just stick something in your AUTOEXEC.BAT, and the date and
+time would automatically get set each boot.
+(TODO: verify the first part? when did this stop happening? add
+something about clones doing the same thing)</p>
+<p>This Compaq Portable contains a [placeholder] date card, one with
+frustratingly little information available, besides an old archived
+magazine article indicating that it was for sale for [placeholder].
+(TODO: behavior with non-Y2K compliant software here)</p>
+<p>So, how do we fix this? Well, we're first going to need to find where
+in the code the date gets set... thankfully, MS-DOS makes this pretty
+easy for us, we just need to search through the code until we find the
+x86 instruction <code>int 21h</code> - and look for instances in which register
+AH has been loaded with value 0x2B. This is the 'SET DATE' function,
+with the following parameters;</p>
+<p>DH register - month, 1 through 12
+DL register - day of month, 1 through 31
+CX year - year
+AL - day of the week, sunday through saturday (0-6)</p>
+<p>We do end up finding a call to this at 0x2C9 in the code!
+At 0x2C3 in the code, we set an immediate value of 0x76C (1900) -
+bingo! And following this, we add the value of [si+05] - AKA the value
+at ds:0173. This is where our value got read in from the clock card.</p>
+<p>From this, we can see the format in which the year is stored on the
+card - an offset from the year 1900.</p>
+<p>TODO: Need to look at ds:0173 and ds:0156 and get specific behavior</p>
+<p>However, one odditiy here is that the <em>origin</em> of the date is <em>two
+bytes</em> - we see 0204 instead of 24. What's going on here? In fact, all
+of the elements of the date are being stored as multiple bytes, which
+seems quite inefficient. This happens at cs:028C.</p>
+<p>We call LODSW to load these two bytes, and then call <code>AAD</code>. Wait, what
+instruction is that?</p>
+<p>This is actually an instruction called 'ASCII ADjust AX Before
+Division'. Basically, what this instruction does is takes a
+BCD-encoded number in AX, and coverts it to a single byte in AL. So,
+if we have someting like 0x0402, we will get 0x002A in AX instead.
+What's the purpose of this? Likely, to make the date card as cheap as
+pssible, BCD-compatible 7400 series logic was used.</p>
+<p>TODO: How does storing data into the card work?</p>
+<p>The usage of BCD in this case tells us a few things - namely that the
+<em>easiest</em> solution to Y2K compliance is just changing that constant
+<code>1900</code> to a constant <code>2000</code>, seeing as the card simply stores an
+offset from the start of the millenium. This definitely passes the
+buck onto some sucker in a hundred years, so it's not exactly the most
+ideal.</p>
+<p>But a solution that works for the next 75 years is a good start, so
+let's try and achieve that! We just need to look for another <code>int 21h</code>
+call, this time with argument 0x2Ah. This is where the program sets
+the date. Before that, let's just fix up the first constant involved
+when it comes to reading the date from the card, which we find at
+cs:02C3. Now, setting the date isn't properly working, so let's track
+own the other constant.</p>
+<p>In regards to that <code>int 21h</code> call, we find it at cs:02EEE, which is
+where the software reads in the value. It does actually return the
+correct value, as DOS is Y2K-complaint - 0x7E8 (2024). However, we're
+once again subtracting a constant 1900, at cs:02F3. We just fix that
+up, and boom! It works.</p>
+<p>Okay, maybe some more useful docs on how to write an improved
+program.. perhaps... here's some info on the calls to cs:037C,
+the subroutine that handles I/O with the OUT instruction.</p>
+<p>First call: AL 10h, DX 02A2 (DX is always the same)
+S1: AL 50h
+S2: AL 51h
+M1: AL 52h
+M2: AL 53h
+H1: AL 54h
+H2: AL 55h
+D1: AL 57h
+D2: AL 58h
+M1: AL 59h
+M2: AL 5Ah
+Y1: AL 5Bh
+Y2: AL 5Ch
+Last call: AL 00h</p>
+<p>All of these calls to OUT are followed by 380 cycles of waiting.
+We then do an 'IN' call w/ AL remaining the same to read the output.</p></div>
+    </div>
+</div>
+</main>
+<footer>
+    <div class="container border text-center pt-3">
+        <div class="mx-auto" style="max-width: 80ch;">
+            <p>(c) 2026 bombsquad.dev</p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
