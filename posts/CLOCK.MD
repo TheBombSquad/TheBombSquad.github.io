@@ -1,5 +1,5 @@
 ---
-title: Making a Y2K-complaint clock update tool
+title: Reverse-engineering an Apparat RTC card for Y2K compliance
 description: A super secret template post.
 date: 2026-02-12
 tags:
@@ -7,25 +7,35 @@ header_image: /images/post.png
 ---
 
 The Compaq Portable that I've restored comes with a couple of
-after-market additions, one of which is a time & date card from
-[placeholer]. There is barely any information about this card online,
-and the software it came with is all I've got to work with... and it's
-not Y2K-ready! The horror! Well, guess it's time to patch it before
-the next millenium...
+after-market additions, one of which is an RTC card from Apparat - the rather boringly named "Clock Calendar Card".
+Unfortunately, information about this card is quite difficult to come across 
+online, and all I have to work with is the original software, sourced from the original image of the Compaq's hard drive.
+Oh, and the software isn't Y2K-compliant! The horror! Well, I guess it's time to patch it before the next millennium arrives...
 
 ---
 
-First, some context - the original IBM PC did not come with an
-on-board battery, so users generally resorted to entering the date and
-time every boot. Aftermaket date & time cards became popular as a
-result - just stick something in your AUTOEXEC.BAT, and the date and
+### **Some context**
+First, some context - what even is an 'RTC card'? The original IBM PC did not come with any
+solution for storing the date and time after shutting off, requiring users
+to enter the date and time on every boot. Therefore, aftermaket calendar cards, with a battery backup,
+became popular - just copy the included software to your disc and add a line to `AUTOEXEC.BAT`, and the date and
 time would automatically get set each boot.
-(TODO: verify the first part? when did this stop happening? add
-something about clones doing the same thing)
 
-This Compaq Portable contains a [placeholder] date card, one with
+```ibm
+Current date is Tue  1-01-1980
+Enter new date (mm-dd-yy): 
+Current time is  0:00:10.98
+Enter new time: _
+```
+
+*A common sight for MS-DOS users without RTC cards.*
+
+
+(TODO: when did this stop happening? add something about clones doing the same thing)
+
+This Compaq Portable contains an Apparat Clock/Calendar card, one with
 frustratingly little information available, besides an old archived
-magazine article indicating that it was for sale for [placeholder].
+magazine article (PC Mag 1982-09 page 9) indicating that it was for sale for $129. (~$428.00 in 2026)
 (TODO: behavior with non-Y2K compliant software here)
 
 So, how do we fix this? Well, we're first going to need to find where
@@ -50,7 +60,7 @@ card - an offset from the year 1900.
 
 TODO: Need to look at ds:0173 and ds:0156 and get specific behavior
 
-However, one odditiy here is that the *origin* of the date is *two
+However, one oddity here is that the *origin* of the date is *two
 bytes* - we see 0204 instead of 24. What's going on here? In fact, all
 of the elements of the date are being stored as multiple bytes, which
 seems quite inefficient. This happens at cs:028C.
@@ -61,9 +71,9 @@ instruction is that?
 This is actually an instruction called 'ASCII ADjust AX Before
 Division'. Basically, what this instruction does is takes a
 BCD-encoded number in AX, and coverts it to a single byte in AL. So,
-if we have someting like 0x0402, we will get 0x002A in AX instead.
+if we have something like 0x0402, we will get 0x002A in AX instead.
 What's the purpose of this? Likely, to make the date card as cheap as
-pssible, BCD-compatible 7400 series logic was used.
+possible, BCD-compatible 7400 series logic was used.
 
 TODO: How does storing data into the card work?
 

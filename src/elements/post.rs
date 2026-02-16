@@ -109,14 +109,15 @@ impl Post {
         let post_content_body =
             markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
 
-        let post_path = path.with_extension("html");
+        // Resulting post file name should be lowercase for consistency
+        let post_path = path.with_extension("html").as_os_str().to_ascii_lowercase();
 
         let post_reading_stats = Post::get_reading_stats(&post_content_body);
 
         let post = Post {
             title: Cow::Owned(post_title),
             description: Cow::Owned(post_description),
-            path: post_path,
+            path: PathBuf::from(post_path),
             body: Cow::Owned(post_content_body),
             preview: Cow::Owned(post_content_preview),
             date: post_creation_date,

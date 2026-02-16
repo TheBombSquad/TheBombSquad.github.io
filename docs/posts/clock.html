@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>Making a Y2K-complaint clock update tool - bombsquad.dev</title>
+    <title>Reverse-engineering an Apparat RTC card for Y2K compliance - bombsquad.dev</title>
     <meta name="description" content="A super secret template post.">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
@@ -34,32 +34,37 @@
         <!-- Name box, with optional inline description -->
         <p class="h3 mb-0">
             <span class="d-inline-flex align-items-baseline gap-2">
-                <a href="/posts/CLOCK.html" class="nav-link d-inline"><b>Making a Y2K-complaint clock update tool</b></a>
+                <a href="/posts/clock.html" class="nav-link d-inline"><b>Reverse-engineering an Apparat RTC card for Y2K compliance</b></a>
             </span>
         </p>
         <!-- Date / tags -->
         <span>
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp2026-02-12&nbsp</span>
 
-            <span class="border rounded-5 text-bg-dark text-primary">&nbsp816 words&nbsp</span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp884 words&nbsp</span>
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp4 min. read&nbsp</span>
         </span>
     </div>
 </div>
         <div class="pt-3"><p>The Compaq Portable that I've restored comes with a couple of
-after-market additions, one of which is a time &amp; date card from
-[placeholer]. There is barely any information about this card online,
-and the software it came with is all I've got to work with... and it's
-not Y2K-ready! The horror! Well, guess it's time to patch it before
-the next millenium...</p>
+after-market additions, one of which is an RTC card from Apparat - the rather boringly named &quot;Clock Calendar Card&quot;.
+Unfortunately, information about this card is quite difficult to come across
+online, and all I have to work with is the original software, sourced from the original image of the Compaq's hard drive.
+Oh, and the software isn't Y2K-compliant! The horror! Well, I guess it's time to patch it before the next millennium arrives...</p>
 <hr />
-<p>First, some context - the original IBM PC did not come with an
-on-board battery, so users generally resorted to entering the date and
-time every boot. Aftermaket date &amp; time cards became popular as a
-result - just stick something in your AUTOEXEC.BAT, and the date and
-time would automatically get set each boot.
-(TODO: verify the first part? when did this stop happening? add
-something about clones doing the same thing)</p>
+<h3><strong>Some context</strong></h3>
+<p>First, some context - what even is an 'RTC card'? The original IBM PC did not come with any
+solution for storing the date and time after shutting off, requiring users
+to enter the date and time on every boot. Therefore, aftermaket calendar cards, with a battery backup,
+became popular - just copy the included software to your disc and add a line to <code>AUTOEXEC.BAT</code>, and the date and
+time would automatically get set each boot.</p>
+<pre><code class="language-ibm">Current date is Tue  1-01-1980
+Enter new date (mm-dd-yy): 
+Current time is  0:00:10.98
+Enter new time: _
+</code></pre>
+<p><em>A common sight for MS-DOS users without RTC cards.</em></p>
+<p>(TODO: when did this stop happening? add something about clones doing the same thing)</p>
 <p>This Compaq Portable contains a [placeholder] date card, one with
 frustratingly little information available, besides an old archived
 magazine article indicating that it was for sale for [placeholder].
