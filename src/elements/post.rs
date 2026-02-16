@@ -10,6 +10,10 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+pub struct ReadStats {
+    pub num_words: usize,
+    pub estimated_reading_time: f64,
+}
 pub struct Post {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
@@ -19,6 +23,7 @@ pub struct Post {
     pub tags: Vec<String>,
     pub preview: Cow<'static, str>,
     pub header_image_path: Option<Cow<'static, str>>,
+    pub read_stats: ReadStats,
 }
 
 impl Post {
@@ -32,6 +37,20 @@ impl Post {
 
     pub fn get_tag_page_path(&self, tag: &str) -> String {
         format!("/tags/{tag}.html")
+    }
+
+    // Thanks CraftedCart for letting me borrow this
+    fn get_reading_stats(text_parts: &str) -> ReadStats {
+        const WORDS_PER_MIN: f64 = 200.0;
+
+        let num_words = text_parts.split_whitespace().filter(|part| !part.trim().is_empty()).count();
+        let mins = num_words as f64 / WORDS_PER_MIN;
+        let estimated_reading_time = mins.round();
+
+        ReadStats {
+            num_words,
+            estimated_reading_time,
+        }
     }
 
     // Strictly for template use - askama does not like it when we pass in a PathBuf/Path.
@@ -92,6 +111,8 @@ impl Post {
 
         let post_path = path.with_extension("html");
 
+        let post_reading_stats = Post::get_reading_stats(&post_content_body);
+
         let post = Post {
             title: Cow::Owned(post_title),
             description: Cow::Owned(post_description),
@@ -101,6 +122,7 @@ impl Post {
             date: post_creation_date,
             tags: post_tags,
             header_image_path: post_header_image,
+            read_stats: post_reading_stats,
         };
 
         Ok(post)

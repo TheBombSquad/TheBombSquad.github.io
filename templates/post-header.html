@@ -29,6 +29,9 @@
             {%- endif %}
             {%- endfor %}
             {%- endif %}
+
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ post.read_stats.num_words }} words&nbsp</span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ post.read_stats.estimated_reading_time}} min. read&nbsp</span>
         </span>
         {%- endif %}
     </div>
