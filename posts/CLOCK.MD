@@ -17,9 +17,13 @@ Oh, and the software isn't Y2K-compliant! The horror! Well, I guess it's time to
 ### **Some context**
 First, some context - what even is an 'RTC card'? The original IBM PC did not come with any
 solution for storing the date and time after shutting off, requiring users
-to enter the date and time on every boot. Therefore, aftermaket calendar cards, with a battery backup,
-became popular - just copy the included software to your disc and add a line to `AUTOEXEC.BAT`, and the date and
-time would automatically get set each boot.
+to enter the date and time on every boot. Therefore, aftermaket RTC (Real-Time Clock) cards
+became popular - just copy the included software to your disk, add a line to `AUTOEXEC.BAT`, and the date and
+time would automatically get set on boot, with the date and time being saved to the card, preserved with a battery backup.
+
+This became less of an issue following the release of the IBM AT in 1984, which actually featured an on-board RTC controller with a battery backup.
+
+---
 
 ```ibm
 Current date is Tue  1-01-1980
@@ -30,77 +34,153 @@ Enter new time: _
 
 *A common sight for MS-DOS users without RTC cards.*
 
+---
 
-(TODO: when did this stop happening? add something about clones doing the same thing)
+### **The Clock/Calendar card**
+![Apparat](/images/apparat-card-front.jpg)
+This Compaq Portable that I've been restoring contains an "Clock/Calendar" card from a company called Apparat,
+a manufacturer of accessories for many home computers of the 1980s. Unfortunately, this particular RTC card has
+frustratingly little information available about it online. The only information I could find was an old archived
+magazine article (PC Mag 1982-09 page 9) indicating that it was for sale for $129. (~$428.00 in 2026).[^apparat-ad]
 
-This Compaq Portable contains an Apparat Clock/Calendar card, one with
-frustratingly little information available, besides an old archived
-magazine article (PC Mag 1982-09 page 9) indicating that it was for sale for $129. (~$428.00 in 2026)
-(TODO: behavior with non-Y2K compliant software here)
+MS-DOS allows for a date to be set up to the year 2099, meaning it's already Y2K-compliant. 
+What happens when we attempt to initialize our RTC card with a date in the current year, 2026?
 
-So, how do we fix this? Well, we're first going to need to find where
-in the code the date gets set... thankfully, MS-DOS makes this pretty
-easy for us, we just need to search through the code until we find the
-x86 instruction `int 21h` - and look for instances in which register
-AH has been loaded with value 0x2B. This is the 'SET DATE' function,
-with the following parameters;
+```ibm
+C:\>DATE
+Current date is Mon  2-16-2026
+Enter new date (mm-dd-yy):
 
-DH register - month, 1 through 12
-DL register - day of month, 1 through 31
-CX year - year
-AL - day of the week, sunday through saturday (0-6)
+C:\>SETCLOCK INITIAL
 
-We do end up finding a call to this at 0x2C9 in the code!
-At 0x2C3 in the code, we set an immediate value of 0x76C (1900) -
-bingo! And following this, we add the value of [si+05] - AKA the value
-at ds:0173. This is where our value got read in from the clock card.
+Clock/Calendar Routine V1.14
+Copyright 1982 Apparat, Inc.
+02/16/99 20:39:34
 
-From this, we can see the format in which the year is stored on the
-card - an offset from the year 1900.
 
-TODO: Need to look at ds:0173 and ds:0156 and get specific behavior
+Is this correct? (Y/N) _
+```
 
-However, one oddity here is that the *origin* of the date is *two
-bytes* - we see 0204 instead of 24. What's going on here? In fact, all
-of the elements of the date are being stored as multiple bytes, which
-seems quite inefficient. This happens at cs:028C.
+...no, that's not correct! What's going on here?
 
-We call LODSW to load these two bytes, and then call `AAD`. Wait, what
-instruction is that?
+---
 
-This is actually an instruction called 'ASCII ADjust AX Before
-Division'. Basically, what this instruction does is takes a
-BCD-encoded number in AX, and coverts it to a single byte in AL. So,
-if we have something like 0x0402, we will get 0x002A in AX instead.
-What's the purpose of this? Likely, to make the date card as cheap as
-possible, BCD-compatible 7400 series logic was used.
+### **Debugging!**
+Let's first figure out how our program is actually getting the date in the first place.
+In MS-DOS, this is actually pretty easy! In assembly language, we can execute system functions,
+conveniently provided to us by MS-DOS, just by loading a byte into the `AH` register and calling `int 21h`.
+The byte specified in the `AH` register determines which function is called.
+We're interested in instances of these calls where `AH` is set to either `2Ah` or `2Bh`.
+These represent the functions for getting the system time, and setting the system time, respectively.
 
-TODO: How does storing data into the card work?
 
-The usage of BCD in this case tells us a few things - namely that the
-*easiest* solution to Y2K compliance is just changing that constant
-`1900` to a constant `2000`, seeing as the card simply stores an
-offset from the start of the millenium. This definitely passes the
-buck onto some sucker in a hundred years, so it's not exactly the most
-ideal.
+>**2Ah - Get date**
+>
+>Returns in registers:
+> - AL - day of the week
+> - CX - year, between 1980 and 2099
+> - DH - month, between 1 and 12
+> - DL - day of the month, between 1 and 31
 
-But a solution that works for the next 75 years is a good start, so
-let's try and achieve that! We just need to look for another `int 21h`
-call, this time with argument 0x2Ah. This is where the program sets
-the date. Before that, let's just fix up the first constant involved
-when it comes to reading the date from the card, which we find at
-cs:02C3. Now, setting the date isn't properly working, so let's track
-own the other constant.
+>**2Bh - Set date**
+>
+>Parameters supplied to registers:
+> - CX - year, between 1980 and 2099
+> - DH - month, between 1 and 12
+> - DL - day of the month, between 1 and 31
 
-In regards to that `int 21h` call, we find it at cs:02EEE, which is
-where the software reads in the value. It does actually return the
-correct value, as DOS is Y2K-complaint - 0x7E8 (2024). However, we're
-once again subtracting a constant 1900, at cs:02F3. We just fix that
-up, and boom! It works.
+Just as a side note, the year here is actually a 16-bit value, stored in the `CX` register.
+...does this mean that a year up to 65535 can be stored? Nope, if you attempt to supply
+a date beyond 2099 (0x833 in hex), `int 21h` will fail and return `0xFF` in register `AL`.
+
+We can use the MS-DOS program `DEBUG` to disassemble (in its words - *unassemble*) the machine language,
+and we do indeed end up finding a single call to `int 21h` with parameter `2Ah` here:
+```ibm
+-u 02e9
+101A:02E9 BF6E01        MOV     DI,016E
+101A:02EC B42A          MOV     AH,2A
+101A:02EE CD21          INT     21
+101A:02F0 895503        MOV     [DI+03],DX
+101A:02F3 81E96C07      SUB     CX,076C
+101A:02F7 80F963        CMP     CL,63
+101A:02FA 7202          JB      02FE
+101A:02FC B163          MOV     CL,63
+```
+
+We can then execute the program and break right after the call to `int 21h`, and inspect the registers:
+```ibm
+-g 02f0
+AX=2A01  BX=0000  CX=07EA  DX=0210
+SP=FFFE  BP=0000  SI=0066  DI=016E
+DS=101A  ES=101A  SS=101A  CS=101A  
+IP=02F0   NV UP EI PL ZR NA PE NC
+101A:02F0 895503        MOV     [DI+03],DX       DS:0171=4D44
+```
+
+Looking at our above reference on this particular `int 21h` call, we do indeed see that the year is stored in register `CX` as `07EAh` - 2026!
+
+So, everything is working correctly on the MS-DOS side, but a closer look at the assembly code above shows
+that we're subtracing a suspicious-looking constant from `CX` - `076C` - which happens to be 1900!
+
+Yup, it's just converting the year to a value representing 'number of years from 1900', 
+and the code we're looking at is also, from lines `02F7` to `02FC`, capping this number to 99.
+
+In fact, a quick search for our constant `6c 07` using `DEBUG` shows another use:
+```ibm
+-s cs:0100 0300 6c 07
+101A:02C4 
+101A:02F5 
+-u 02c3
+101A:02C3 B96C07        MOV     CX,076C  
+101A:02C6 024C05        ADD     CL,[SI+05]  
+```
+It's used in the portion of the code where the data is being read back from the card. 
+So, we can just adjust this constant to `0x7D0` (2000), and all of our issues should be solved!
+Now we're storing the year as an offset from the year 2000, rather than the year 1900.
+
+```ibm
+C:\>SETCLOCK INITIAL
+
+Clock/Calendar Routine V1.14
+Copyright 1982 Apparat, Inc.
+02/16/26 21:10:15
+
+
+Is this correct? (Y/N) _
+```
+Finally, it's correct... for the next 74 years, anyways.
+
+---
+
+### **Digging a little deeper**
+
+![M583](/images/apparat-card-m5832.jpg)
+
+Is this the best possible solution, or can we actually come up with a better solution
+with the hardware we have?
+
+Wait, what specific hardware do we have, anyways? 
+If you take a look at the image of the Clock / Calendar card in the previous section,
+you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one stand-out - the OKI Semiconductors M5832. 
+
+As per the data sheet[^m5832], this chip is an RTC IC with a 4-bit address and data bus. 
+We would normally anticipate a total capacity of 256 bits, but the function table
+in the data sheet indicates that the internal counters have some fairly strict data limitations.
+Only 3 bits are used for the 10s place of the second counter, and only one bit is used for the 10s place of the month counter.
+
+The x86 actually provides us with some instructions to easily communicate with the M5832, or any device expecting BCD.
+We can use the `AAM` instruction to convert a byte in `AL` to two BCD-encoded bytes. 
+We can use the `AAD` instruction to convert two bytes in `AX` to a single hexadecimal-encoded value in `AX`.
+
+For example:
+If we have `0x1A` (26) in `AL`, the `AAM` instruction will fill register `AX` with `0x0206`.
+Running `AAD` on this will reverse the process, restoring the original value of `0x1A`.
 
 Okay, maybe some more useful docs on how to write an improved
 program.. perhaps... here's some info on the calls to cs:037C,
 the subroutine that handles I/O with the OUT instruction.
+
+The IO port used is 0x2a2.
 
 First call: AL 10h, DX 02A2 (DX is always the same)
 S1: AL 50h
@@ -119,3 +199,6 @@ Last call: AL 00h
 
 All of these calls to OUT are followed by 380 cycles of waiting.
 We then do an 'IN' call w/ AL remaining the same to read the output.
+
+[^apparat-ad]: Apparat, Inc. *PC Magazine*, vol. 1, no. 5, Sept. 1982, https://archive.org/details/PC-Mag-1982-09
+[^m5832]: OKI Semiconductor, *MSM5832 MICROPROCESSOR REAL-TIME CLOCK/CALENDAR*, Dec. 1983, https://deramp.com/downloads/mfe_archive/050-Component%20Specifications/OKI/Oki%20MM5832%20RTC.pdf

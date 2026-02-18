@@ -45,7 +45,7 @@ impl Post {
 
         let num_words = text_parts.split_whitespace().filter(|part| !part.trim().is_empty()).count();
         let mins = num_words as f64 / WORDS_PER_MIN;
-        let estimated_reading_time = mins.round();
+        let estimated_reading_time = mins.ceil();
 
         ReadStats {
             num_words,

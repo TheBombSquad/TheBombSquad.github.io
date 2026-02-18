@@ -104,7 +104,7 @@ p img {
     position: relative;
     z-index: 102;
     border: 1px solid var(--bs-border-color);
-    border-radius: 4px;
+    border-radius: 8px;
 }
 
 
@@ -181,7 +181,11 @@ Inline code styling
     color: #161616;
 }
 
+pre code {
+    font-size: 12px;
+}
+
 code.language-ibm  {
-    font-family: 'IBM-VGA-9x16';
+    font-family: 'IBM-VGA-9x16', monospace;
     font-size: 16px;
 }
