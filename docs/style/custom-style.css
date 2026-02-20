@@ -196,3 +196,18 @@ code.language-ibm  {
     font-family: 'IBM-VGA-9x16', monospace;
     font-size: 16px;
 }
+
+/*
+Nice table formatting
+*/
+table.table {
+    width: auto;
+    display: table;
+    margin: 0.5rem auto;
+    margin-bottom: 1.5rem;
+}
+
+table.table th,
+table.table td {
+    padding: 0 0.5rem;
+}
