@@ -156,6 +156,7 @@ Finally, it's correct... for the next 74 years, anyways.
 
 ![M583](/images/apparat-card-m5832.jpg)
 
+So, we swapped out a constant and patched this software for the next three quarters of a century.
 Is this the best possible solution, or can we actually come up with a better solution
 with the hardware we have?
 
@@ -164,41 +165,81 @@ If you take a look at the image of the Clock / Calendar card in the previous sec
 you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one stand-out - the OKI Semiconductors M5832. 
 
 As per the data sheet[^m5832], this chip is an RTC IC with a 4-bit address and data bus. 
-We would normally anticipate a total capacity of 256 bits, but the function table
+With this size, we would normally anticipate a total capacity of 256 bits, but the function table
 in the data sheet indicates that the internal counters have some fairly strict data limitations.
 Only 3 bits are used for the 10s place of the second counter, and only one bit is used for the 10s place of the month counter.
 
-The x86 actually provides us with some instructions to easily communicate with the M5832, or any device expecting BCD.
-We can use the `AAM` instruction to convert a byte in `AL` to two BCD-encoded bytes. 
-We can use the `AAD` instruction to convert two bytes in `AX` to a single hexadecimal-encoded value in `AX`.
+How exactly does the x86 processor interact with this card? 
+The software uses the `IN` and `OUT` instructions to communicate with the card on IO port `0x2A2`.
+The software also specifically uses a routine at `CS:037C` to add a delay between calls to `OUT`, by using the `LOOP` instruction.
+The specific number of times the `LOOP` instruction is called is 550 times, which resolves to an approximate delay of 580 microseconds on a 4.77Mhz-clocked 8088.[^x86]
 
-For example:
-If we have `0x1A` (26) in `AL`, the `AAM` instruction will fill register `AX` with `0x0206`.
-Running `AAD` on this will reverse the process, restoring the original value of `0x1A`.
+Any read or write access to the card also seems to stop the time from proceeding, so the byte `0x00` needs to be sent in order to restore operation.
 
-Okay, maybe some more useful docs on how to write an improved
-program.. perhaps... here's some info on the calls to cs:037C,
-the subroutine that handles I/O with the OUT instruction.
+I've created a table of operations based on my observations:
 
-The IO port used is 0x2a2.
+| Counter | Read   | Write  |
+|---------|--------|--------|
+| S1      | `0x50` | `0x10` |
+| S10     | `0x51` | `0x11` |
+| MI1     | `0x52` | `0x12` |
+| MI10    | `0x53` | `0x13` |
+| H1      | `0x54` | `0x14` |
+| H10     | `0x55` | `0x15` |
+| W       | `0x56` | `0x16` |
+| D1      | `0x57` | `0x17` |
+| D10     | `0x58` | `0x18` |
+| MO1     | `0x59` | `0x19` |
+| MO10    | `0x5A` | `0x1A` |
+| Y1      | `0x5B` | `0x1B` |
+| Y10     | `0x5C` | `0x1C` |
+| End     | `0x00` | `0x00` |
 
-First call: AL 10h, DX 02A2 (DX is always the same)
-S1: AL 50h
-S2: AL 51h
-M1: AL 52h
-M2: AL 53h
-H1: AL 54h
-H2: AL 55h
-D1: AL 57h
-D2: AL 58h
-M1: AL 59h
-M2: AL 5Ah
-Y1: AL 5Bh
-Y2: AL 5Ch
-Last call: AL 00h
+You might think that having to split our date and time numbers into their 10s-place and 1s-place digits might involve a little bit of work,
+but actually, the x86 instruction set comes to save the day!
+The x86 provides us with some instructions to easily communicate with the M5832, or any device expecting BCD.
+We can use the `AAM` instruction to convert a byte in `AL` to two BCD-encoded bytes,
+and we can use the `AAD` instruction to convert two bytes in `AX` to a single hexadecimal-encoded value in `AX`.
 
-All of these calls to OUT are followed by 380 cycles of waiting.
-We then do an 'IN' call w/ AL remaining the same to read the output.
+As an example for how this works, we can consider the number of years since 2000 - 26, or `0x1A` in hex.
+Loading `0x1A` into our `AX` register and then running the `AAM` instruction fills `AX` with the value `0x0206`.
+Then, we just need to send `0x1B` to the M5832, followed by the value in `AL`, and then `0x1C` for the Y10 counter, and value in `AH`. Finally, sending `0x00` will have set the year properly.
+
+This works in reverse too! If we want to read the year back, we just read the value at `0x5B` and `0x5C`.
+However, since this is a 4-bit value, the top 4 bits of the value are junk and need to be masked out by calling `AND` with a value of `0xF`.
+Once this is done, moving both of the values back to the `AX` register, and then running the `AAD` instruction will restore our value of `0x1C`.
+
+---
+
+## **Final thoughts**
+
+There's actually an oddity in the above table that you might have noticed - counter 'W' - for day of the week!
+The pattern determining what the days of the week are each month actually does not repeat every century, it repeats every 400 years!
+
+Therefore, the 16th of February in 2026 is a Monday, and the 16th of February in 1926 is a Tuesday.
+
+This entire thing is foiled, isn't it...? 
+
+Actually, no, everything is fine - the original Apparat software completely ignores this counter and never assigns any value to it.
+It also doesn't need to read from the value either, because MS-DOS automatically assigns the date of the week for you - 
+if you'll notice above, the `int 21h` call for setting the date does not take a day of the week as a parameter.
+
+What this *does* mean is that we can actually use this day-of-the-week counter as a century counter! We have about three bits of precision to work with,
+so if we just write our own clock-setting software that takes advantage of this, we can solve this issue for the next 800 years!
+
+... actually, the FAT filesystem will probably need to be patched first, since the way *that* stores years only leaves us until 2107.
+
+I'll leave that as an exercise for the reader!
+
+---
+
+## **The software**
+
+I've uploaded the original `SETCLOCK.COM` and my patched `SETCLK21.COM` variant to Archive.org, for anyone who happens to have the same RTC card!
+Find it here: [placeholder]
+
+Thanks for reading!
 
 [^apparat-ad]: Apparat, Inc. *PC Magazine*, vol. 1, no. 5, Sept. 1982, https://archive.org/details/PC-Mag-1982-09
 [^m5832]: OKI Semiconductor, *MSM5832 MICROPROCESSOR REAL-TIME CLOCK/CALENDAR*, Dec. 1983, https://deramp.com/downloads/mfe_archive/050-Component%20Specifications/OKI/Oki%20MM5832%20RTC.pdf
+[^x86]: Intel Corporation, *iAPX 86/88, 186/188 User's Manual, Programmer's Reference*, May. 1983, https://bitsavers.trailing-edge.com/components/intel/80186/210911-001_iAPX86_88_186_188_Programmers_Reference_1983.pdf
