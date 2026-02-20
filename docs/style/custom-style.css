@@ -46,6 +46,12 @@ Shades of amber:
     font-style: normal;
 }
 
+html {
+    position: relative;
+    min-height: 100%;
+    overflow-y: scroll;
+}
+
 .root, [data-bs-theme="dark"] {
     --color-amber-50: #fff8f1;
     --color-amber-100: #fff2e2;
@@ -61,6 +67,7 @@ Shades of amber:
 
     --bs-body-bg: var(--color-amber-950);
     --bs-body-color: var(--color-amber-500);
+    --bs-emphasis-color: var(--color-amber-400);
 
     --bs-primary-rgb: var(--color-amber-500);
 
@@ -72,12 +79,8 @@ Shades of amber:
     --bs-font-sans-serif: NEC-AP3-8x16, system-ui;
     --bs-font-monospace: Terminus;
 }
-:root {
-}
 
-blockquote {
-    border-left: #ffff00 4px solid;
-    padding-left: 12px;
+:root {
 }
 
 header {
@@ -96,6 +99,11 @@ hr {
     color: var(--bs-border-color)
 }
 
+blockquote {
+    border-left: #ffff00 4px solid;
+    padding-left: 12px;
+}
+
 p img {
     display: block;
     margin: 1rem auto;
@@ -107,16 +115,9 @@ p img {
     border-radius: 8px;
 }
 
-
 body {
     text-shadow: .1rem .1rem 0 rgba(118, 88, 0, .5);
     position: relative;
-}
-
-html {
-    position: relative;
-    min-height: 100%;
-    overflow-y: scroll;
 }
 
 /*
@@ -174,13 +175,19 @@ pre {
 Inline code styling
  */
 :not(pre) > code {
-    background: #ffd333;
+    background: transparent;
+    color: yellow;
+    font-family: 'NEC-AP3-8x16', monospace;
+    font-size: 16px;
     border: 1px solid var(--bs-border-color);
     border-radius: 4px;
     padding: 0.05rem 0.25rem;
-    color: #161616;
+    font-smooth: never;
 }
 
+/*
+Regular code block styling
+ */
 pre code {
     font-size: 12px;
 }

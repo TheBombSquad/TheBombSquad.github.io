@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Reverse-engineering an Apparat RTC card for Y2K compliance - bombsquad.dev</title>
-    <meta name="description" content="A super secret template post.">
+    <meta name="description" content="Reverse-engineering an Apparat RTC card for Y2K compliance">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link href="/style/custom-style.css" type="text/css" rel="stylesheet">
@@ -41,13 +41,13 @@
         <span>
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp2026-02-12&nbsp</span>
 
-            <span class="border rounded-5 text-bg-dark text-primary">&nbsp1886 words&nbsp</span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp1885 words&nbsp</span>
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp10 min. read&nbsp</span>
         </span>
     </div>
 </div>
         <div class="pt-3"><p>The Compaq Portable that I've restored comes with a couple of
-after-market additions, one of which is an RTC card from Apparat - the rather boringly named &quot;Clock Calendar Card&quot;.
+after-market additions, one of which is an RTC card from Apparat - the rather boringly named &quot;Clock/Calendar Card&quot;.
 Unfortunately, information about this card is quite difficult to come across
 online, and all I have to work with is the original software, sourced from the original image of the Compaq's hard drive.
 Oh, and the software isn't Y2K-compliant! The horror! Well, I guess it's time to patch it before the next millennium arrives...</p>
@@ -55,7 +55,7 @@ Oh, and the software isn't Y2K-compliant! The horror! Well, I guess it's time to
 <h3><strong>Some context</strong></h3>
 <p>First, some context - what even is an 'RTC card'? The original IBM PC did not come with any
 solution for storing the date and time after shutting off, requiring users
-to enter the date and time on every boot. Therefore, aftermaket RTC (Real-Time Clock) cards
+to enter the date and time on every boot. Therefore, aftermarket RTC (Real-Time Clock) cards
 became popular - just copy the included software to your disk, add a line to <code>AUTOEXEC.BAT</code>, and the date and
 time would automatically get set on boot, with the date and time being saved to the card, preserved with a battery backup.</p>
 <p>This became less of an issue following the release of the IBM AT in 1984, which actually featured an on-board RTC controller with a battery backup.</p>
@@ -69,9 +69,9 @@ Enter new time: _
 <hr />
 <h3><strong>The Clock/Calendar card</strong></h3>
 <p><img src="/images/apparat-card-front.jpg" alt="Apparat" />
-This Compaq Portable that I've been restoring contains an &quot;Clock/Calendar&quot; card from a company called Apparat,
-a manufacturer of accessories for many home computers of the 1980s. Unfortunately, this particular RTC card has
-frustratingly little information available about it online. The only information I could find was an old archived
+This Compaq Portable that I've been restoring contains a &quot;Clock/Calendar&quot; card from a company called Apparat,
+a manufacturer of accessories for many home computers of the 1980s. Unfortunately, there is frustratingly little
+information available about this card online. The only information I could find was an old archived
 magazine article (PC Mag 1982-09 page 9) indicating that it was for sale for $129. (~$428.00 in 2026).<sup><a href="#user-content-fn-apparat-ad" id="user-content-fnref-apparat-ad" data-footnote-ref="" aria-describedby="footnote-label">1</a></sup></p>
 <p>MS-DOS allows for a date to be set up to the year 2099, meaning it's already Y2K-compliant.
 What happens when we attempt to initialize our RTC card with a date in the current year, 2026?</p>
@@ -168,11 +168,11 @@ Is this correct? (Y/N) _
 <hr />
 <h3><strong>Digging a little deeper</strong></h3>
 <p><img src="/images/apparat-card-m5832.jpg" alt="M583" /></p>
-<p>So, we swapped out a constant and patched this software for the next three quarters of a century.
+<p>So, we swapped out a constant and patched this software for the next three-quarters of a century.
 Is this the best possible solution, or can we actually come up with a better solution
 with the hardware we have?</p>
 <p>Wait, what specific hardware do we have, anyways?
-If you take a look at the image of the Clock / Calendar card in the previous section,
+If you take a look at the image of the Clock/Calendar card in the previous section,
 you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one stand-out - the OKI Semiconductors M5832.</p>
 <p>As per the data sheet<sup><a href="#user-content-fn-m5832" id="user-content-fnref-m5832" data-footnote-ref="" aria-describedby="footnote-label">2</a></sup>, this chip is an RTC IC with a 4-bit address and data bus.
 With this size, we would normally anticipate a total capacity of 256 bits, but the function table
@@ -182,14 +182,15 @@ Only 3 bits are used for the 10s place of the second counter, and only one bit i
 The software uses the <code>IN</code> and <code>OUT</code> instructions to communicate with the card on IO port <code>0x2A2</code>.
 The software also specifically uses a routine at <code>CS:037C</code> to add a delay between calls to <code>OUT</code>, by using the <code>LOOP</code> instruction.
 The specific number of times the <code>LOOP</code> instruction is called is 550 times, which resolves to an approximate delay of 580 microseconds on a 4.77Mhz-clocked 8088.<sup><a href="#user-content-fn-x86" id="user-content-fnref-x86" data-footnote-ref="" aria-describedby="footnote-label">3</a></sup></p>
-<p>Any read or write access to the card also seems to stop the time from proceeding, so the byte <code>0x00</code> needs to be sent in order to restore operation.</p>
+<p>Any read or write access to the card also seems to stop the clock on the card,
+so in order to restore operation, the byte <code>0x00</code> needs to be sent.</p>
 <p>I've created a table of operations based on my observations:</p>
-<table>
+<table class="table table-sm table-striped table-bordered">
 <thead>
 <tr>
-<th>Counter</th>
-<th>Read</th>
-<th>Write</th>
+<th><strong>Counter</strong></th>
+<th><strong>Read</strong></th>
+<th><strong>Write</strong></th>
 </tr>
 </thead>
 <tbody>
@@ -265,9 +266,9 @@ The specific number of times the <code>LOOP</code> instruction is called is 550 
 </tr>
 </tbody>
 </table>
-<p>You might think that having to split our date and time numbers into their 10s-place and 1s-place digits might involve a little bit of work,
+<p>You might think that splitting our date and time values into their 10's-place and 1's-place digits might involve a little bit of work,
 but actually, the x86 instruction set comes to save the day!
-The x86 provides us with some instructions to easily communicate with the M5832, or any device expecting BCD.
+The x86 provides us with some instructions to easily communicate with the M5832, or any device expecting BCD encoding.
 We can use the <code>AAM</code> instruction to convert a byte in <code>AL</code> to two BCD-encoded bytes,
 and we can use the <code>AAD</code> instruction to convert two bytes in <code>AX</code> to a single hexadecimal-encoded value in <code>AX</code>.</p>
 <p>As an example for how this works, we can consider the number of years since 2000 - 26, or <code>0x1A</code> in hex.
@@ -287,14 +288,15 @@ It also doesn't need to read from the value either, because MS-DOS automatically
 if you'll notice above, the <code>int 21h</code> call for setting the date does not take a day of the week as a parameter.</p>
 <p>What this <em>does</em> mean is that we can actually use this day-of-the-week counter as a century counter! We have about three bits of precision to work with,
 so if we just write our own clock-setting software that takes advantage of this, we can solve this issue for the next 800 years!</p>
-<p>... actually, the FAT filesystem will probably need to be patched first, since the way <em>that</em> stores years only leaves us until 2107.</p>
+<p>... actually, the FAT filesystem will need to be patched first, since the way <em>that</em> stores years only leaves us until 2107.</p>
 <p>I'll leave that as an exercise for the reader!</p>
 <hr />
 <h2><strong>The software</strong></h2>
 <p>I've uploaded the original <code>SETCLOCK.COM</code> and my patched <code>SETCLK21.COM</code> variant to Archive.org, for anyone who happens to have the same RTC card!
 Find it here: [placeholder]</p>
 <p>Thanks for reading!</p>
-<section data-footnotes="" class="footnotes"><h2 id="footnote-label" class="sr-only">Footnotes</h2>
+<hr />
+<section data-footnotes="" class="footnotes"><h3 id="footnote-label" class="sr-only">Footnotes</h3>
 <ol>
 <li id="user-content-fn-apparat-ad">
 <p>Apparat, Inc. <em>PC Magazine</em>, vol. 1, no. 5, Sept. 1982, <a href="https://archive.org/details/PC-Mag-1982-09">https://archive.org/details/PC-Mag-1982-09</a> <a href="#user-content-fnref-apparat-ad" data-footnote-backref="" aria-label="Back to content" class="data-footnote-backref">↩</a></p>

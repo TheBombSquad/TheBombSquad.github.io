@@ -9,6 +9,7 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use markdown::{CompileOptions, ParseOptions};
 
 pub struct ReadStats {
     pub num_words: usize,
@@ -107,7 +108,14 @@ impl Post {
 
         // Parse the actual post content
         let post_content_body =
-            markdown::to_html_with_options(&post_content, &markdown::Options::gfm()).unwrap();
+        markdown::to_html_with_options(&post_content, &markdown::Options {
+            parse: ParseOptions::gfm(),
+            compile: CompileOptions {
+                gfm_footnote_label_tag_name: Some("h3".to_string()),
+                .. CompileOptions::gfm()
+            },
+        }).unwrap()
+        .replace("<table>", "<table class=\"table table-sm table-striped table-bordered\">"); // Hack to make tables look nice
 
         // Resulting post file name should be lowercase for consistency
         let post_path = path.with_extension("html").as_os_str().to_ascii_lowercase();

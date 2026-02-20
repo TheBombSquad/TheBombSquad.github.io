@@ -1,13 +1,13 @@
 ---
 title: Reverse-engineering an Apparat RTC card for Y2K compliance
-description: A super secret template post.
+description: Reverse-engineering an Apparat RTC card for Y2K compliance
 date: 2026-02-12
 tags:
 header_image: /images/post.png
 ---
 
 The Compaq Portable that I've restored comes with a couple of
-after-market additions, one of which is an RTC card from Apparat - the rather boringly named "Clock Calendar Card".
+after-market additions, one of which is an RTC card from Apparat - the rather boringly named "Clock/Calendar Card".
 Unfortunately, information about this card is quite difficult to come across 
 online, and all I have to work with is the original software, sourced from the original image of the Compaq's hard drive.
 Oh, and the software isn't Y2K-compliant! The horror! Well, I guess it's time to patch it before the next millennium arrives...
@@ -17,7 +17,7 @@ Oh, and the software isn't Y2K-compliant! The horror! Well, I guess it's time to
 ### **Some context**
 First, some context - what even is an 'RTC card'? The original IBM PC did not come with any
 solution for storing the date and time after shutting off, requiring users
-to enter the date and time on every boot. Therefore, aftermaket RTC (Real-Time Clock) cards
+to enter the date and time on every boot. Therefore, aftermarket RTC (Real-Time Clock) cards
 became popular - just copy the included software to your disk, add a line to `AUTOEXEC.BAT`, and the date and
 time would automatically get set on boot, with the date and time being saved to the card, preserved with a battery backup.
 
@@ -38,9 +38,9 @@ Enter new time: _
 
 ### **The Clock/Calendar card**
 ![Apparat](/images/apparat-card-front.jpg)
-This Compaq Portable that I've been restoring contains an "Clock/Calendar" card from a company called Apparat,
-a manufacturer of accessories for many home computers of the 1980s. Unfortunately, this particular RTC card has
-frustratingly little information available about it online. The only information I could find was an old archived
+This Compaq Portable that I've been restoring contains a "Clock/Calendar" card from a company called Apparat,
+a manufacturer of accessories for many home computers of the 1980s. Unfortunately, there is frustratingly little
+information available about this card online. The only information I could find was an old archived
 magazine article (PC Mag 1982-09 page 9) indicating that it was for sale for $129. (~$428.00 in 2026).[^apparat-ad]
 
 MS-DOS allows for a date to be set up to the year 2099, meaning it's already Y2K-compliant. 
@@ -156,12 +156,12 @@ Finally, it's correct... for the next 74 years, anyways.
 
 ![M583](/images/apparat-card-m5832.jpg)
 
-So, we swapped out a constant and patched this software for the next three quarters of a century.
+So, we swapped out a constant and patched this software for the next three-quarters of a century.
 Is this the best possible solution, or can we actually come up with a better solution
 with the hardware we have?
 
 Wait, what specific hardware do we have, anyways? 
-If you take a look at the image of the Clock / Calendar card in the previous section,
+If you take a look at the image of the Clock/Calendar card in the previous section,
 you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one stand-out - the OKI Semiconductors M5832. 
 
 As per the data sheet[^m5832], this chip is an RTC IC with a 4-bit address and data bus. 
@@ -174,30 +174,31 @@ The software uses the `IN` and `OUT` instructions to communicate with the card o
 The software also specifically uses a routine at `CS:037C` to add a delay between calls to `OUT`, by using the `LOOP` instruction.
 The specific number of times the `LOOP` instruction is called is 550 times, which resolves to an approximate delay of 580 microseconds on a 4.77Mhz-clocked 8088.[^x86]
 
-Any read or write access to the card also seems to stop the time from proceeding, so the byte `0x00` needs to be sent in order to restore operation.
+Any read or write access to the card also seems to stop the clock on the card, 
+so in order to restore operation, the byte `0x00` needs to be sent.
 
 I've created a table of operations based on my observations:
 
-| Counter | Read   | Write  |
-|---------|--------|--------|
-| S1      | `0x50` | `0x10` |
-| S10     | `0x51` | `0x11` |
-| MI1     | `0x52` | `0x12` |
-| MI10    | `0x53` | `0x13` |
-| H1      | `0x54` | `0x14` |
-| H10     | `0x55` | `0x15` |
-| W       | `0x56` | `0x16` |
-| D1      | `0x57` | `0x17` |
-| D10     | `0x58` | `0x18` |
-| MO1     | `0x59` | `0x19` |
-| MO10    | `0x5A` | `0x1A` |
-| Y1      | `0x5B` | `0x1B` |
-| Y10     | `0x5C` | `0x1C` |
-| End     | `0x00` | `0x00` |
+| **Counter** | **Read** | **Write** |
+|-------------|----------|-----------|
+| S1          | `0x50`   | `0x10`    |
+| S10         | `0x51`   | `0x11`    |
+| MI1         | `0x52`   | `0x12`    |
+| MI10        | `0x53`   | `0x13`    |
+| H1          | `0x54`   | `0x14`    |
+| H10         | `0x55`   | `0x15`    |
+| W           | `0x56`   | `0x16`    |
+| D1          | `0x57`   | `0x17`    |
+| D10         | `0x58`   | `0x18`    |
+| MO1         | `0x59`   | `0x19`    |
+| MO10        | `0x5A`   | `0x1A`    |
+| Y1          | `0x5B`   | `0x1B`    |
+| Y10         | `0x5C`   | `0x1C`    |
+| End         | `0x00`   | `0x00`    |
 
-You might think that having to split our date and time numbers into their 10s-place and 1s-place digits might involve a little bit of work,
+You might think that splitting our date and time values into their 10's-place and 1's-place digits might involve a little bit of work,
 but actually, the x86 instruction set comes to save the day!
-The x86 provides us with some instructions to easily communicate with the M5832, or any device expecting BCD.
+The x86 provides us with some instructions to easily communicate with the M5832, or any device expecting BCD encoding.
 We can use the `AAM` instruction to convert a byte in `AL` to two BCD-encoded bytes,
 and we can use the `AAD` instruction to convert two bytes in `AX` to a single hexadecimal-encoded value in `AX`.
 
@@ -227,7 +228,7 @@ if you'll notice above, the `int 21h` call for setting the date does not take a 
 What this *does* mean is that we can actually use this day-of-the-week counter as a century counter! We have about three bits of precision to work with,
 so if we just write our own clock-setting software that takes advantage of this, we can solve this issue for the next 800 years!
 
-... actually, the FAT filesystem will probably need to be patched first, since the way *that* stores years only leaves us until 2107.
+... actually, the FAT filesystem will need to be patched first, since the way *that* stores years only leaves us until 2107.
 
 I'll leave that as an exercise for the reader!
 
@@ -239,6 +240,8 @@ I've uploaded the original `SETCLOCK.COM` and my patched `SETCLK21.COM` variant 
 Find it here: [placeholder]
 
 Thanks for reading!
+
+---
 
 [^apparat-ad]: Apparat, Inc. *PC Magazine*, vol. 1, no. 5, Sept. 1982, https://archive.org/details/PC-Mag-1982-09
 [^m5832]: OKI Semiconductor, *MSM5832 MICROPROCESSOR REAL-TIME CLOCK/CALENDAR*, Dec. 1983, https://deramp.com/downloads/mfe_archive/050-Component%20Specifications/OKI/Oki%20MM5832%20RTC.pdf
