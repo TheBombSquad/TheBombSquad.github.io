@@ -1,9 +1,11 @@
 ---
 title: Reverse-engineering an Apparat RTC card for Y2K compliance
 description: Reverse-engineering an Apparat RTC card for Y2K compliance
-date: 2026-02-12
+date: 2026-02-20
 tags:
-header_image: /images/post.png
+  - retrocomputing
+  - reverse-engineering
+header_image: /images/chip.png
 ---
 
 The Compaq Portable that I've restored comes with a couple of
@@ -66,12 +68,12 @@ Is this correct? (Y/N) _
 ---
 
 ### **Debugging!**
-Let's first figure out how our program is actually getting the date in the first place.
+Let's first figure out how the original Apparat software is actually getting the date in the first place.
 In MS-DOS, this is actually pretty easy! In assembly language, we can execute system functions,
 conveniently provided to us by MS-DOS, just by loading a byte into the `AH` register and calling `int 21h`.
 The byte specified in the `AH` register determines which function is called.
-We're interested in instances of these calls where `AH` is set to either `2Ah` or `2Bh`.
-These represent the functions for getting the system time, and setting the system time, respectively.
+We're interested in instances of these calls where `AH` is set to either `0x2A` or `0x2B`.
+These represent the functions for getting the system time and setting the system time, respectively.
 
 
 >**2Ah - Get date**
@@ -94,7 +96,7 @@ Just as a side note, the year here is actually a 16-bit value, stored in the `CX
 a date beyond 2099 (0x833 in hex), `int 21h` will fail and return `0xFF` in register `AL`.
 
 We can use the MS-DOS program `DEBUG` to disassemble (in its words - *unassemble*) the machine language,
-and we do indeed end up finding a single call to `int 21h` with parameter `2Ah` here:
+and we do indeed end up finding a single call to `int 21h` with parameter `0x2A` here:
 ```ibm
 -u 02e9
 101A:02E9 BF6E01        MOV     DI,016E
@@ -117,15 +119,15 @@ IP=02F0   NV UP EI PL ZR NA PE NC
 101A:02F0 895503        MOV     [DI+03],DX       DS:0171=4D44
 ```
 
-Looking at our above reference on this particular `int 21h` call, we do indeed see that the year is stored in register `CX` as `07EAh` - 2026!
+Looking at our above reference on this particular `int 21h` call, we do indeed see that the year is stored in register `CX` as `0x07EA` - 2026!
 
 So, everything is working correctly on the MS-DOS side, but a closer look at the assembly code above shows
-that we're subtracing a suspicious-looking constant from `CX` - `076C` - which happens to be 1900!
+that we're subtracing a suspicious-looking constant from `CX` - `0x076C` - which happens to be 1900!
 
 Yup, it's just converting the year to a value representing 'number of years from 1900', 
-and the code we're looking at is also, from lines `02F7` to `02FC`, capping this number to 99.
+and the code we're looking at is also, from lines `0x02F7` to `0x02FC`, capping this number to 99.
 
-In fact, a quick search for our constant `6c 07` using `DEBUG` shows another use:
+In fact, a quick search for our constant `6c 07` (bytes swapped around due to endianness) using `DEBUG` shows another use:
 ```ibm
 -s cs:0100 0300 6c 07
 101A:02C4 
@@ -146,7 +148,11 @@ Copyright 1982 Apparat, Inc.
 02/16/26 21:10:15
 
 
-Is this correct? (Y/N) _
+Is this correct? (Y/N) Y
+
+C:\>DATE
+Current date is Mon  2-16-2026
+Enter new date (mm-dd-yy):
 ```
 Finally, it's correct... for the next 74 years, anyways.
 
@@ -156,25 +162,28 @@ Finally, it's correct... for the next 74 years, anyways.
 
 ![M583](/images/apparat-card-m5832.jpg)
 
-So, we swapped out a constant and patched this software for the next three-quarters of a century.
+So, we swapped out a constant and patched the software for the next three-quarters of a century.
 Is this the best possible solution, or can we actually come up with a better solution
 with the hardware we have?
 
 Wait, what specific hardware do we have, anyways? 
 If you take a look at the image of the Clock/Calendar card in the previous section,
-you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one stand-out - the OKI Semiconductors M5832. 
+you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one exception - the OKI Semiconductors M5832. 
 
-As per the data sheet[^m5832], this chip is an RTC IC with a 4-bit address and data bus. 
-With this size, we would normally anticipate a total capacity of 256 bits, but the function table
-in the data sheet indicates that the internal counters have some fairly strict data limitations.
-Only 3 bits are used for the 10s place of the second counter, and only one bit is used for the 10s place of the month counter.
+As per its data sheet[^m5832], this chip is an RTC IC with a 4-bit address and data bus. 
+With this combination, we would normally anticipate a total capacity of 256 bits, but the function table
+provided in the data sheet indicates that the internal counters have some fairly strict data limitations.
+For example, only three bits are used for the 10s place of the second counter, and only one bit is used for the 10s place of the month counter.
 
-How exactly does the x86 processor interact with this card? 
-The software uses the `IN` and `OUT` instructions to communicate with the card on IO port `0x2A2`.
+So, unfortunately, the card itself is only capable of keeping track of a period of 100 years.  
+
+This data sheet also presents us with another question - we can only communicate with this card using 4 bits at a time, so how exactly does the x86 processor interact with this card? 
+
+Well, after tracing through the original Apparat software some more, we find that the software uses the `IN` and `OUT` instructions to communicate with the card on IO port `0x2A2`.
 The software also specifically uses a routine at `CS:037C` to add a delay between calls to `OUT`, by using the `LOOP` instruction.
 The specific number of times the `LOOP` instruction is called is 550 times, which resolves to an approximate delay of 580 microseconds on a 4.77Mhz-clocked 8088.[^x86]
 
-Any read or write access to the card also seems to stop the clock on the card, 
+Also, any read or write access to the card also seems to stop the clock on the card, 
 so in order to restore operation, the byte `0x00` needs to be sent.
 
 I've created a table of operations based on my observations:
@@ -196,14 +205,18 @@ I've created a table of operations based on my observations:
 | Y10         | `0x5C`   | `0x1C`    |
 | End         | `0x00`   | `0x00`    |
 
-You might think that splitting our date and time values into their 10's-place and 1's-place digits might involve a little bit of work,
-but actually, the x86 instruction set comes to save the day!
+So, we need to split our date or time values into both their 10's place and their 1's place digits,
+as the method of communication with the M5832 uses 4-bit BCD encoding.
+
+This sounds like it would take a handful of operations to carry out, but we actually have an easy way to do this on the x86!
 The x86 provides us with some instructions to easily communicate with the M5832, or any device expecting BCD encoding.
 We can use the `AAM` instruction to convert a byte in `AL` to two BCD-encoded bytes,
 and we can use the `AAD` instruction to convert two bytes in `AX` to a single hexadecimal-encoded value in `AX`.
 
 As an example for how this works, we can consider the number of years since 2000 - 26, or `0x1A` in hex.
+
 Loading `0x1A` into our `AX` register and then running the `AAM` instruction fills `AX` with the value `0x0206`.
+
 Then, we just need to send `0x1B` to the M5832, followed by the value in `AL`, and then `0x1C` for the Y10 counter, and value in `AH`. Finally, sending `0x00` will have set the year properly.
 
 This works in reverse too! If we want to read the year back, we just read the value at `0x5B` and `0x5C`.
@@ -215,20 +228,21 @@ Once this is done, moving both of the values back to the `AX` register, and then
 ## **Final thoughts**
 
 There's actually an oddity in the above table that you might have noticed - counter 'W' - for day of the week!
-The pattern determining what the days of the week are each month actually does not repeat every century, it repeats every 400 years!
+
+This seemingly throws a wrench into everything, since the pattern determining what the days of the week are each month actually does not repeat every century, it repeats every 400 years!
 
 Therefore, the 16th of February in 2026 is a Monday, and the 16th of February in 1926 is a Tuesday.
 
-This entire thing is foiled, isn't it...? 
+The day of the week is going to be inaccurate! Everything's ruined now, isn't it?
 
 Actually, no, everything is fine - the original Apparat software completely ignores this counter and never assigns any value to it.
 It also doesn't need to read from the value either, because MS-DOS automatically assigns the date of the week for you - 
-if you'll notice above, the `int 21h` call for setting the date does not take a day of the week as a parameter.
+if you'll notice above in this article, the `int 21h` call for setting the date does not take a day of the week as a parameter.
 
 What this *does* mean is that we can actually use this day-of-the-week counter as a century counter! We have about three bits of precision to work with,
 so if we just write our own clock-setting software that takes advantage of this, we can solve this issue for the next 800 years!
 
-... actually, the FAT filesystem will need to be patched first, since the way *that* stores years only leaves us until 2107.
+...actually, the FAT filesystem will need to be patched first, since the way *that* stores years only leaves us covered until 2107.
 
 I'll leave that as an exercise for the reader!
 

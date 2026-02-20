@@ -67,7 +67,7 @@ html {
 
     --bs-body-bg: var(--color-amber-950);
     --bs-body-color: var(--color-amber-500);
-    --bs-emphasis-color: var(--color-amber-400);
+    --bs-emphasis-color: yellow;
 
     --bs-primary-rgb: var(--color-amber-500);
 
@@ -207,7 +207,12 @@ table.table {
     margin-bottom: 1.5rem;
 }
 
+table.table td{
+    text-align: right;
+}
+
 table.table th,
 table.table td {
+    color: var(--color-amber-500);
     padding: 0 0.5rem;
 }

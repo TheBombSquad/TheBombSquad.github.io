@@ -16,22 +16,24 @@
                 {%- endif %}
             </span>
         </p>
-        <!-- Date / tags -->
+        <!-- Date / stats -->
         {%- if post.date.is_some() || post.has_visible_tags() %}
         <span>
             {%- if let Some(date) = post.date %}
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ date }}&nbsp</span>
             {%- endif %}
-            {%- if post.has_visible_tags() %}
-            {%- for tag in post.tags %}
-            {%- if !tag.starts_with("_") %}
-            <a href="{{ post.get_tag_page_path(tag) }}" class="border rounded-5 text-bg-dark text-primary text-decoration-none">&nbsp{{ tag }}&nbsp</a>
-            {%- endif %}
-            {%- endfor %}
-            {%- endif %}
-
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ post.read_stats.num_words }} words&nbsp</span>
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ post.read_stats.estimated_reading_time}} min. read&nbsp</span>
+        </span>
+        {%- endif %}
+
+        {%- if post.has_visible_tags() %}
+        <span>
+            {%- for tag in post.tags %}
+            {%- if !tag.starts_with("_") %}
+            <a href="{{ post.get_tag_page_path(tag) }}" class="border rounded-5 text-bg-dark text-body-emphasis text-decoration-none">&nbsp{{ tag }}&nbsp</a>
+            {%- endif %}
+            {%- endfor %}
         </span>
         {%- endif %}
     </div>

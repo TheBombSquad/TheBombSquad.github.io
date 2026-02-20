@@ -27,7 +27,7 @@
         <div class="mx-auto d-flex align-items-center gap-2" style="max-width: 80ch;">
     <!-- Image box for posts. (optional) -->
     <div class="border bg-dark d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-        <img src="/images/post.png" alt="" class="position-relative" style="width: 48px; height: 48px; object-fit: scale-down; image-rendering: pixelated;" />
+        <img src="/images/chip.png" alt="" class="position-relative" style="width: 48px; height: 48px; object-fit: scale-down; image-rendering: pixelated;" />
     </div>
     <!-- Box containing the post title on top, tags on the bottom. -->
     <div class="flex-grow-1 d-flex flex-column" style="">
@@ -37,12 +37,15 @@
                 <a href="/posts/clock.html" class="nav-link d-inline"><b>Reverse-engineering an Apparat RTC card for Y2K compliance</b></a>
             </span>
         </p>
-        <!-- Date / tags -->
+        <!-- Date / stats -->
         <span>
-            <span class="border rounded-5 text-bg-dark text-primary">&nbsp2026-02-12&nbsp</span>
-
-            <span class="border rounded-5 text-bg-dark text-primary">&nbsp1885 words&nbsp</span>
-            <span class="border rounded-5 text-bg-dark text-primary">&nbsp10 min. read&nbsp</span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp2026-02-20&nbsp</span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp2004 words&nbsp</span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp11 min. read&nbsp</span>
+        </span>
+        <span>
+            <a href="/tags/retrocomputing.html" class="border rounded-5 text-bg-dark text-body-emphasis text-decoration-none">&nbspretrocomputing&nbsp</a>
+            <a href="/tags/reverse-engineering.html" class="border rounded-5 text-bg-dark text-body-emphasis text-decoration-none">&nbspreverse-engineering&nbsp</a>
         </span>
     </div>
 </div>
@@ -91,12 +94,12 @@ Is this correct? (Y/N) _
 <p>...no, that's not correct! What's going on here?</p>
 <hr />
 <h3><strong>Debugging!</strong></h3>
-<p>Let's first figure out how our program is actually getting the date in the first place.
+<p>Let's first figure out how the original Apparat software is actually getting the date in the first place.
 In MS-DOS, this is actually pretty easy! In assembly language, we can execute system functions,
 conveniently provided to us by MS-DOS, just by loading a byte into the <code>AH</code> register and calling <code>int 21h</code>.
 The byte specified in the <code>AH</code> register determines which function is called.
-We're interested in instances of these calls where <code>AH</code> is set to either <code>2Ah</code> or <code>2Bh</code>.
-These represent the functions for getting the system time, and setting the system time, respectively.</p>
+We're interested in instances of these calls where <code>AH</code> is set to either <code>0x2A</code> or <code>0x2B</code>.
+These represent the functions for getting the system time and setting the system time, respectively.</p>
 <blockquote>
 <p><strong>2Ah - Get date</strong></p>
 <p>Returns in registers:</p>
@@ -120,7 +123,7 @@ These represent the functions for getting the system time, and setting the syste
 ...does this mean that a year up to 65535 can be stored? Nope, if you attempt to supply
 a date beyond 2099 (0x833 in hex), <code>int 21h</code> will fail and return <code>0xFF</code> in register <code>AL</code>.</p>
 <p>We can use the MS-DOS program <code>DEBUG</code> to disassemble (in its words - <em>unassemble</em>) the machine language,
-and we do indeed end up finding a single call to <code>int 21h</code> with parameter <code>2Ah</code> here:</p>
+and we do indeed end up finding a single call to <code>int 21h</code> with parameter <code>0x2A</code> here:</p>
 <pre><code class="language-ibm">-u 02e9
 101A:02E9 BF6E01        MOV     DI,016E
 101A:02EC B42A          MOV     AH,2A
@@ -139,12 +142,12 @@ DS=101A  ES=101A  SS=101A  CS=101A
 IP=02F0   NV UP EI PL ZR NA PE NC
 101A:02F0 895503        MOV     [DI+03],DX       DS:0171=4D44
 </code></pre>
-<p>Looking at our above reference on this particular <code>int 21h</code> call, we do indeed see that the year is stored in register <code>CX</code> as <code>07EAh</code> - 2026!</p>
+<p>Looking at our above reference on this particular <code>int 21h</code> call, we do indeed see that the year is stored in register <code>CX</code> as <code>0x07EA</code> - 2026!</p>
 <p>So, everything is working correctly on the MS-DOS side, but a closer look at the assembly code above shows
-that we're subtracing a suspicious-looking constant from <code>CX</code> - <code>076C</code> - which happens to be 1900!</p>
+that we're subtracing a suspicious-looking constant from <code>CX</code> - <code>0x076C</code> - which happens to be 1900!</p>
 <p>Yup, it's just converting the year to a value representing 'number of years from 1900',
-and the code we're looking at is also, from lines <code>02F7</code> to <code>02FC</code>, capping this number to 99.</p>
-<p>In fact, a quick search for our constant <code>6c 07</code> using <code>DEBUG</code> shows another use:</p>
+and the code we're looking at is also, from lines <code>0x02F7</code> to <code>0x02FC</code>, capping this number to 99.</p>
+<p>In fact, a quick search for our constant <code>6c 07</code> (bytes swapped around due to endianness) using <code>DEBUG</code> shows another use:</p>
 <pre><code class="language-ibm">-s cs:0100 0300 6c 07
 101A:02C4 
 101A:02F5 
@@ -162,27 +165,32 @@ Copyright 1982 Apparat, Inc.
 02/16/26 21:10:15
 
 
-Is this correct? (Y/N) _
+Is this correct? (Y/N) Y
+
+C:\&gt;DATE
+Current date is Mon  2-16-2026
+Enter new date (mm-dd-yy):
 </code></pre>
 <p>Finally, it's correct... for the next 74 years, anyways.</p>
 <hr />
 <h3><strong>Digging a little deeper</strong></h3>
 <p><img src="/images/apparat-card-m5832.jpg" alt="M583" /></p>
-<p>So, we swapped out a constant and patched this software for the next three-quarters of a century.
+<p>So, we swapped out a constant and patched the software for the next three-quarters of a century.
 Is this the best possible solution, or can we actually come up with a better solution
 with the hardware we have?</p>
 <p>Wait, what specific hardware do we have, anyways?
 If you take a look at the image of the Clock/Calendar card in the previous section,
-you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one stand-out - the OKI Semiconductors M5832.</p>
-<p>As per the data sheet<sup><a href="#user-content-fn-m5832" id="user-content-fnref-m5832" data-footnote-ref="" aria-describedby="footnote-label">2</a></sup>, this chip is an RTC IC with a 4-bit address and data bus.
-With this size, we would normally anticipate a total capacity of 256 bits, but the function table
-in the data sheet indicates that the internal counters have some fairly strict data limitations.
-Only 3 bits are used for the 10s place of the second counter, and only one bit is used for the 10s place of the month counter.</p>
-<p>How exactly does the x86 processor interact with this card?
-The software uses the <code>IN</code> and <code>OUT</code> instructions to communicate with the card on IO port <code>0x2A2</code>.
+you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one exception - the OKI Semiconductors M5832.</p>
+<p>As per its data sheet<sup><a href="#user-content-fn-m5832" id="user-content-fnref-m5832" data-footnote-ref="" aria-describedby="footnote-label">2</a></sup>, this chip is an RTC IC with a 4-bit address and data bus.
+With this combination, we would normally anticipate a total capacity of 256 bits, but the function table
+provided in the data sheet indicates that the internal counters have some fairly strict data limitations.
+For example, only three bits are used for the 10s place of the second counter, and only one bit is used for the 10s place of the month counter.</p>
+<p>So, unfortunately, the card itself is only capable of keeping track of a period of 100 years.</p>
+<p>This data sheet also presents us with another question - we can only communicate with this card using 4 bits at a time, so how exactly does the x86 processor interact with this card?</p>
+<p>Well, after tracing through the original Apparat software some more, we find that the software uses the <code>IN</code> and <code>OUT</code> instructions to communicate with the card on IO port <code>0x2A2</code>.
 The software also specifically uses a routine at <code>CS:037C</code> to add a delay between calls to <code>OUT</code>, by using the <code>LOOP</code> instruction.
 The specific number of times the <code>LOOP</code> instruction is called is 550 times, which resolves to an approximate delay of 580 microseconds on a 4.77Mhz-clocked 8088.<sup><a href="#user-content-fn-x86" id="user-content-fnref-x86" data-footnote-ref="" aria-describedby="footnote-label">3</a></sup></p>
-<p>Any read or write access to the card also seems to stop the clock on the card,
+<p>Also, any read or write access to the card also seems to stop the clock on the card,
 so in order to restore operation, the byte <code>0x00</code> needs to be sent.</p>
 <p>I've created a table of operations based on my observations:</p>
 <table class="table table-sm table-striped table-bordered">
@@ -266,29 +274,30 @@ so in order to restore operation, the byte <code>0x00</code> needs to be sent.</
 </tr>
 </tbody>
 </table>
-<p>You might think that splitting our date and time values into their 10's-place and 1's-place digits might involve a little bit of work,
-but actually, the x86 instruction set comes to save the day!
+<p>So, we need to split our date or time values into both their 10's place and their 1's place digits,
+as the method of communication with the M5832 uses 4-bit BCD encoding.</p>
+<p>This sounds like it would take a handful of operations to carry out, but we actually have an easy way to do this on the x86!
 The x86 provides us with some instructions to easily communicate with the M5832, or any device expecting BCD encoding.
 We can use the <code>AAM</code> instruction to convert a byte in <code>AL</code> to two BCD-encoded bytes,
 and we can use the <code>AAD</code> instruction to convert two bytes in <code>AX</code> to a single hexadecimal-encoded value in <code>AX</code>.</p>
-<p>As an example for how this works, we can consider the number of years since 2000 - 26, or <code>0x1A</code> in hex.
-Loading <code>0x1A</code> into our <code>AX</code> register and then running the <code>AAM</code> instruction fills <code>AX</code> with the value <code>0x0206</code>.
-Then, we just need to send <code>0x1B</code> to the M5832, followed by the value in <code>AL</code>, and then <code>0x1C</code> for the Y10 counter, and value in <code>AH</code>. Finally, sending <code>0x00</code> will have set the year properly.</p>
+<p>As an example for how this works, we can consider the number of years since 2000 - 26, or <code>0x1A</code> in hex.</p>
+<p>Loading <code>0x1A</code> into our <code>AX</code> register and then running the <code>AAM</code> instruction fills <code>AX</code> with the value <code>0x0206</code>.</p>
+<p>Then, we just need to send <code>0x1B</code> to the M5832, followed by the value in <code>AL</code>, and then <code>0x1C</code> for the Y10 counter, and value in <code>AH</code>. Finally, sending <code>0x00</code> will have set the year properly.</p>
 <p>This works in reverse too! If we want to read the year back, we just read the value at <code>0x5B</code> and <code>0x5C</code>.
 However, since this is a 4-bit value, the top 4 bits of the value are junk and need to be masked out by calling <code>AND</code> with a value of <code>0xF</code>.
 Once this is done, moving both of the values back to the <code>AX</code> register, and then running the <code>AAD</code> instruction will restore our value of <code>0x1C</code>.</p>
 <hr />
 <h2><strong>Final thoughts</strong></h2>
-<p>There's actually an oddity in the above table that you might have noticed - counter 'W' - for day of the week!
-The pattern determining what the days of the week are each month actually does not repeat every century, it repeats every 400 years!</p>
+<p>There's actually an oddity in the above table that you might have noticed - counter 'W' - for day of the week!</p>
+<p>This seemingly throws a wrench into everything, since the pattern determining what the days of the week are each month actually does not repeat every century, it repeats every 400 years!</p>
 <p>Therefore, the 16th of February in 2026 is a Monday, and the 16th of February in 1926 is a Tuesday.</p>
-<p>This entire thing is foiled, isn't it...?</p>
+<p>The day of the week is going to be inaccurate! Everything's ruined now, isn't it?</p>
 <p>Actually, no, everything is fine - the original Apparat software completely ignores this counter and never assigns any value to it.
 It also doesn't need to read from the value either, because MS-DOS automatically assigns the date of the week for you -
-if you'll notice above, the <code>int 21h</code> call for setting the date does not take a day of the week as a parameter.</p>
+if you'll notice above in this article, the <code>int 21h</code> call for setting the date does not take a day of the week as a parameter.</p>
 <p>What this <em>does</em> mean is that we can actually use this day-of-the-week counter as a century counter! We have about three bits of precision to work with,
 so if we just write our own clock-setting software that takes advantage of this, we can solve this issue for the next 800 years!</p>
-<p>... actually, the FAT filesystem will need to be patched first, since the way <em>that</em> stores years only leaves us until 2107.</p>
+<p>...actually, the FAT filesystem will need to be patched first, since the way <em>that</em> stores years only leaves us covered until 2107.</p>
 <p>I'll leave that as an exercise for the reader!</p>
 <hr />
 <h2><strong>The software</strong></h2>
