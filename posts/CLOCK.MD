@@ -25,8 +25,6 @@ time would automatically get set on boot, with the date and time being saved to 
 
 This became less of an issue following the release of the IBM AT in 1984, which actually featured an on-board RTC controller with a battery backup.
 
----
-
 ```ibm
 Current date is Tue  1-01-1980
 Enter new date (mm-dd-yy): 
@@ -170,7 +168,7 @@ Wait, what specific hardware do we have, anyways?
 If you take a look at the image of the Clock/Calendar card in the previous section,
 you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one exception - the OKI Semiconductors M5832. 
 
-As per its data sheet[^m5832], this chip is an RTC IC with a 4-bit address and data bus. 
+As per its data sheet[^m5832], this chip is an RTC IC with a 4-bit address and a 4-bit data bus. 
 With this combination, we would normally anticipate a total capacity of 256 bits, but the function table
 provided in the data sheet indicates that the internal counters have some fairly strict data limitations.
 For example, only three bits are used for the 10s place of the second counter, and only one bit is used for the 10s place of the month counter.
@@ -186,7 +184,7 @@ The specific number of times the `LOOP` instruction is called is 550 times, whic
 Also, any read or write access to the card also seems to stop the clock on the card, 
 so in order to restore operation, the byte `0x00` needs to be sent.
 
-I've created a table of operations based on my observations:
+I've created a table of operations based on my observations, with M5832 internal counter names taken from the data sheet:
 
 | **Counter** | **Read** | **Write** |
 |-------------|----------|-----------|

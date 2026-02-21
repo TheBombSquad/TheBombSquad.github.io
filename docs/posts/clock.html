@@ -41,12 +41,12 @@
         <!-- Date / stats -->
         <span>
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp2026-02-20&nbsp</span>
-            <span class="border rounded-5 text-bg-dark text-primary">&nbsp2005 words&nbsp</span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp2015 words&nbsp</span>
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp11 min. read&nbsp</span>
         </span>
         <span>
-            <a href="/tags/retrocomputing.html" class="border rounded-5 bg-dark tag-link d-inline">&nbspretrocomputing&nbsp</a>
-            <a href="/tags/reverse-engineering.html" class="border rounded-5 bg-dark tag-link d-inline">&nbspreverse-engineering&nbsp</a>
+            <a href="/tags/retrocomputing.html" class="border rounded-5 bg-dark d-inline text-decoration-underline px-2">retrocomputing</a>
+            <a href="/tags/reverse-engineering.html" class="border rounded-5 bg-dark d-inline text-decoration-underline px-2">reverse-engineering</a>
         </span>
     </div>
 </div>
@@ -63,7 +63,6 @@ to enter the date and time on every boot. Therefore, aftermarket RTC (Real-Time 
 became popular - just copy the included software to your disk, add a line to <code>AUTOEXEC.BAT</code>, and the date and
 time would automatically get set on boot, with the date and time being saved to the card, preserved with a battery backup.</p>
 <p>This became less of an issue following the release of the IBM AT in 1984, which actually featured an on-board RTC controller with a battery backup.</p>
-<hr />
 <pre><code class="language-ibm">Current date is Tue  1-01-1980
 Enter new date (mm-dd-yy): 
 Current time is  0:00:10.98
@@ -182,7 +181,7 @@ with the hardware we have?</p>
 <p>Wait, what specific hardware do we have, anyways?
 If you take a look at the image of the Clock/Calendar card in the previous section,
 you'll notice it almost entirely consists of off-the-shelf 7400-series components, with one exception - the OKI Semiconductors M5832.</p>
-<p>As per its data sheet<sup><a href="#user-content-fn-m5832" id="user-content-fnref-m5832" data-footnote-ref="" aria-describedby="footnote-label">2</a></sup>, this chip is an RTC IC with a 4-bit address and data bus.
+<p>As per its data sheet<sup><a href="#user-content-fn-m5832" id="user-content-fnref-m5832" data-footnote-ref="" aria-describedby="footnote-label">2</a></sup>, this chip is an RTC IC with a 4-bit address and a 4-bit data bus.
 With this combination, we would normally anticipate a total capacity of 256 bits, but the function table
 provided in the data sheet indicates that the internal counters have some fairly strict data limitations.
 For example, only three bits are used for the 10s place of the second counter, and only one bit is used for the 10s place of the month counter.</p>
@@ -193,7 +192,7 @@ The software also specifically uses a routine at <code>CS:037C</code> to add a d
 The specific number of times the <code>LOOP</code> instruction is called is 550 times, which resolves to an approximate delay of 580 microseconds on a 4.77Mhz-clocked 8088.<sup><a href="#user-content-fn-x86" id="user-content-fnref-x86" data-footnote-ref="" aria-describedby="footnote-label">3</a></sup></p>
 <p>Also, any read or write access to the card also seems to stop the clock on the card,
 so in order to restore operation, the byte <code>0x00</code> needs to be sent.</p>
-<p>I've created a table of operations based on my observations:</p>
+<p>I've created a table of operations based on my observations, with M5832 internal counter names taken from the data sheet:</p>
 <table class="table table-sm table-striped table-bordered">
 <thead>
 <tr>

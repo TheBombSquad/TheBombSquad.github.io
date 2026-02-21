@@ -31,7 +31,7 @@
         <span>
             {%- for tag in post.tags %}
             {%- if !tag.starts_with("_") %}
-            <a href="{{ post.get_tag_page_path(tag) }}" class="border rounded-5 bg-dark tag-link d-inline">&nbsp{{ tag }}&nbsp</a>
+            <a href="{{ post.get_tag_page_path(tag) }}" class="border rounded-5 bg-dark d-inline text-decoration-underline px-2">{{ tag }}</a>
             {%- endif %}
             {%- endfor %}
         </span>

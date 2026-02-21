@@ -53,7 +53,7 @@ html {
     color-scheme: dark;
 }
 
-.root, [data-bs-theme="dark"] {
+:root, [data-bs-theme="dark"] {
     --color-amber-50: #fff8f1;
     --color-amber-100: #fff2e2;
     --color-amber-200: #ffe4c1;
@@ -72,10 +72,16 @@ html {
 
     --bs-primary-rgb: var(--color-amber-500);
 
-    --bs-link-hover-color: var(--color-amber-300);
-    --bs-nav-link-hover-color: var(--color-amber-300);
+    --bs-dark-text-emphasis: var(--color-amber-700);
+    --bs-light-text-emphasis: yellow;
 
-    --bs-link-color: var(--color-amber-700);
+    --bs-link-color-rgb: 255, 255, 0;
+    --bs-link-color: rgb(255, 255, 0);
+    --bs-link-hover-color: white;
+    --bs-link-hover-color-rgb: 255, 255, 255;
+
+    --bs-nav-link-color: var(--color-amber-500);
+    --bs-nav-link-hover-color: white;
 
     --bs-font-sans-serif: NEC-AP3-8x16, system-ui;
     --bs-font-monospace: Terminus;
@@ -178,7 +184,7 @@ Inline code styling
  */
 :not(pre) > code {
     background: transparent;
-    color: yellow;
+    color: #ff9000;
     font-family: 'NEC-AP3-8x16', monospace;
     font-size: 16px;
     border: 1px solid var(--bs-border-color);
@@ -225,16 +231,4 @@ Fancy yellow highlight color (thanks CraftedCart)
 *::selection {
   background: var(--bs-body-color);
   color: var(--bs-body-bg);
-}
-
-/* Specifically for tag badges */
-.tag-link {
-    color: var(--bs-link-color);
-    text-decoration: none;
-}
-
-.tag-link:hover,
-.tag-link:focus {
-    color: var(--bs-nav-link-hover-color);
-    text-decoration: none;
 }
