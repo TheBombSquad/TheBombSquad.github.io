@@ -43,7 +43,7 @@ Enter new time: _
 This Compaq Portable that I've been restoring contains a "Clock/Calendar" card from a company called Apparat,
 a manufacturer of accessories for many home computers of the 1980s. Unfortunately, there is frustratingly little
 information available about this card online. The only information I could find was an old archived
-magazine article (PC Mag 1982-09 page 9) indicating that it was for sale for $129. (~$428.00 in 2026).[^apparat-ad]
+magazine article (PC Mag 1982-09 page 9) indicating that it was for sale for $129 (~$428.00 in 2026).[^apparat-ad]
 
 MS-DOS allows for a date to be set up to the year 2099, meaning it's already Y2K-compliant. 
 What happens when we attempt to initialize our RTC card with a date in the current year, 2026?
@@ -122,7 +122,7 @@ IP=02F0   NV UP EI PL ZR NA PE NC
 Looking at our above reference on this particular `int 21h` call, we do indeed see that the year is stored in register `CX` as `0x07EA` - 2026!
 
 So, everything is working correctly on the MS-DOS side, but a closer look at the assembly code above shows
-that we're subtracing a suspicious-looking constant from `CX` - `0x076C` - which happens to be 1900!
+that we're subtracting a suspicious-looking constant from `CX` - `0x076C` - which happens to be 1900!
 
 Yup, it's just converting the year to a value representing 'number of years from 1900', 
 and the code we're looking at is also, from lines `0x02F7` to `0x02FC`, capping this number to 99.
