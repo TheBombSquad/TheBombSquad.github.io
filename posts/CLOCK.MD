@@ -251,7 +251,7 @@ I'll leave that as an exercise for the reader!
 ## **The software**
 
 I've uploaded the original `SETCLOCK.COM` and my patched `SETCLK21.COM` variant to Archive.org, for anyone who happens to have the same RTC card!
-Find it here: [placeholder]
+Find it here: https://archive.org/details/APPARAT-SETCLOCK
 
 Thanks for reading!
 

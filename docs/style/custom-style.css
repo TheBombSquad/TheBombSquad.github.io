@@ -50,6 +50,7 @@ html {
     position: relative;
     min-height: 100%;
     overflow-y: scroll;
+    color-scheme: dark;
 }
 
 .root, [data-bs-theme="dark"] {
@@ -118,6 +119,7 @@ p img {
 body {
     text-shadow: .1rem .1rem 0 rgba(118, 88, 0, .5);
     position: relative;
+    min-height: 100vh;
 }
 
 /*
@@ -125,7 +127,7 @@ Scanline effect
  */
 body::before {
     content: "";
-    position: absolute;
+    position: fixed;
     inset: 0;
     pointer-events: none;
     background: repeating-linear-gradient(

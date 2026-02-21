@@ -31,6 +31,7 @@ If you are interested in the development of projects of mine, feel free to check
 out my accounts in these places:
 * GitHub: [TheBombSquad](https://github.com/TheBombSquad)
 * GitLab: [@TheBombSquad](https://gitlab.com/TheBombSquad)
+* Internet Archive: [@TheBombSquad](https://archive.org/details/@thebombsquad)
 
 #### This Site
 
@@ -43,7 +44,7 @@ I used [Bootstrap](https://getbootstrap.com/) for CSS/styling. The main font use
 [NEC APC3 8x16](https://int10h.org/oldschool-pc-fonts/fontlist/font?nec_apc3_8x16), by `VileR`. 
 I also use the [Terminus TTF](https://files.ax86.net/terminus-ttf/) font for code blocks.
 
-I'm striving to keep this website as lightweight and accessible as possible, so
+I'm striving to keep this website fairly lightweight and accessible, so
 don't expect any fancy JavaScript or tracking features.
 
 What's with the amber color scheme, you might ask? I like amber CRTs!
