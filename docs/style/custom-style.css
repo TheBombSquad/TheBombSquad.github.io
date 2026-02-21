@@ -226,3 +226,15 @@ Fancy yellow highlight color (thanks CraftedCart)
   background: var(--bs-body-color);
   color: var(--bs-body-bg);
 }
+
+/* Specifically for tag badges */
+.tag-link {
+    color: var(--bs-link-color);
+    text-decoration: none;
+}
+
+.tag-link:hover,
+.tag-link:focus {
+    color: var(--bs-nav-link-hover-color);
+    text-decoration: none;
+}
