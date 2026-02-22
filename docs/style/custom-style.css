@@ -81,7 +81,7 @@ html {
     --bs-link-hover-color-rgb: 255, 255, 255;
 
     --bs-nav-link-color: var(--color-amber-500);
-    --bs-nav-link-hover-color: white;
+    --bs-nav-link-hover-color: yellow;
 
     --bs-font-sans-serif: NEC-AP3-8x16, system-ui;
     --bs-font-monospace: Terminus;
@@ -231,4 +231,11 @@ Fancy yellow highlight color (thanks CraftedCart)
 *::selection {
   background: var(--bs-body-color);
   color: var(--bs-body-bg);
+}
+
+/* Prevent links from breaking mobile
+ */
+a {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }

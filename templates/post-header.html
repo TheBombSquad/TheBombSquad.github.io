@@ -8,22 +8,22 @@
     <!-- Box containing the post title on top, tags on the bottom. -->
     <div class="flex-grow-1 d-flex flex-column" style="">
         <!-- Name box, with optional inline description -->
-        <p class="h3 mb-0">
+        <h1 class="h3 mb-0">
             <span class="d-inline-flex align-items-baseline gap-2">
                 <a href="/{{ post.get_path_str() }}" class="nav-link d-inline"><b>{{ post.title }}</b></a>
                 {%- if self.show_inline_description %}
                 <span class="h6 d-inline">{{ post.description }}</span>
                 {%- endif %}
             </span>
-        </p>
+        </h1>
         <!-- Date / stats -->
         {%- if post.date.is_some() || post.has_visible_tags() %}
         <span>
             {%- if let Some(date) = post.date %}
             <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ date }}&nbsp</span>
             {%- endif %}
-            <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ post.read_stats.num_words }} words&nbsp</span>
-            <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ post.read_stats.estimated_reading_time}} min. read&nbsp</span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ post.read_stats.num_words }}&nbspwords&nbsp</span>
+            <span class="border rounded-5 text-bg-dark text-primary">&nbsp{{ post.read_stats.estimated_reading_time}}&nbspmin.&nbspread&nbsp</span>
         </span>
         {%- endif %}
 
