@@ -7,8 +7,10 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::path::PathBuf;
 use std::rc::Rc;
 use tracing_subscriber::FmtSubscriber;
+use crate::elements::common::OgType;
 
 mod elements;
 
@@ -21,6 +23,12 @@ const TAGS_DIR: &str = concatcp!(OUT_DIR, "tags");
 
 const POSTS_DESCRIPTION: &str = "A listing of all of the posts on this site, sorted by date.";
 const PROJECTS_DESCRIPTION: &str = "A listing of some of the projects I've worked on - in no particular order. This list isn't comprehensive!";
+
+const SITE_URL: &str = "https://bombsquad.dev";
+
+pub fn convert_path_to_url(path: &str) -> String {
+    format!("{}/{}", SITE_URL, path.strip_prefix(OUT_DIR).unwrap_or(path))
+}
 
 fn clean_output_dir(path: &str) {
     tracing::info!("Cleaning up: {}", path);
@@ -78,9 +86,12 @@ fn build_home_page(blog_posts: &[Rc<Post>]) {
     let home_page = HomePage {
         title: Cow::Borrowed("Home"),
         description: Cow::Borrowed("bombsquad.dev"),
+        path: PathBuf::from(OUT_DIR),
         navbar: NavigationBar::new(),
         recent_posts: recent_blog_posts,
         show_inline_description: false,
+        og_type: OgType::Website,
+        og_url: SITE_URL.to_string()
     };
 
     let mut home_page_file = OpenOptions::new()
@@ -96,9 +107,13 @@ fn build_home_page(blog_posts: &[Rc<Post>]) {
 }
 
 fn build_full_post_listing(blog_posts: &[Rc<Post>]) {
+    let path = PathBuf::from(OUT_DIR).join("posts.html");
+    let og_path = convert_path_to_url(&path.to_string_lossy());
+
     let posts_page = PostListingPage {
         title: Cow::Borrowed("Posts"),
         description: Cow::Borrowed(POSTS_DESCRIPTION),
+        path,
         navbar: NavigationBar::new(),
         show_inline_description: false,
         posts: blog_posts
@@ -106,6 +121,8 @@ fn build_full_post_listing(blog_posts: &[Rc<Post>]) {
             .filter(|x| !x.has_tag("_no-index"))
             .cloned()
             .collect(),
+        og_type: OgType::Website,
+        og_url: og_path
     };
 
     let mut posts_page_file = OpenOptions::new()
@@ -121,12 +138,18 @@ fn build_full_post_listing(blog_posts: &[Rc<Post>]) {
 }
 
 fn build_project_listing(projects: &[Rc<Post>]) {
+    let path = PathBuf::from(OUT_DIR).join("posts/projects.html");
+    let og_path = convert_path_to_url(&path.to_string_lossy());
+
     let projects_page = PostListingPage {
         title: Cow::Borrowed("Projects"),
         description: Cow::Borrowed(PROJECTS_DESCRIPTION),
+        path,
         navbar: NavigationBar::new(),
         show_inline_description: true,
         posts: projects.to_vec(),
+        og_type: OgType::Website,
+        og_url: og_path,
     };
 
     let mut project_page_file = OpenOptions::new()
@@ -155,32 +178,37 @@ fn build_tag_listing_pages(blog_posts: &[Rc<Post>]) {
         });
 
     for (tag, posts) in tag_map {
+        let path = PathBuf::from(TAGS_DIR).join(tag).with_extension("html");
+        let og_path = convert_path_to_url(&path.to_string_lossy());
+
         let tag_page = PostListingPage {
             title: Cow::Owned(format!("Posts tagged {tag}")),
             description: Cow::Owned(format!("Listing of all posts on this website that have been tagged \"{tag}\".")),
+            path: path.clone(),
             navbar: NavigationBar::new(),
             show_inline_description: false,
             posts,
+            og_type: OgType::Website,
+            og_url: og_path
         };
 
-        let tag_path = format!("{TAGS_DIR}/{tag}.html");
 
-        if let Some(parent) = std::path::Path::new(&tag_path).parent() {
-            std::fs::create_dir_all(parent).unwrap();
+        if let Ok(_) = std::fs::exists(&std::path::Path::new(TAGS_DIR)) {
+            std::fs::create_dir_all(TAGS_DIR).unwrap();
         }
 
         let mut tag_page_file = OpenOptions::new()
             .create(true)
             .write(true)
             .truncate(true)
-            .open(&tag_path)
+            .open(&path)
             .unwrap();
         tag_page_file
             .write_all(tag_page.render().unwrap().as_bytes())
             .unwrap();
         tag_page_file.flush().unwrap();
 
-        tracing::info!("Created page {:?}", tag_path);
+        tracing::info!("Created page {:?}", path);
     }
 }
 
