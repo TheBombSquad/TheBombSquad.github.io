@@ -5,7 +5,7 @@ date: 2026-02-20
 tags:
   - retrocomputing
   - reverse-engineering
-header_image: /images/chip.png
+header_image: images/chip.png
 ---
 
 The Compaq Portable that I've restored comes with a couple of

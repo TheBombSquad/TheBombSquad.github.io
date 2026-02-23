@@ -1,16 +1,14 @@
 <div class="mx-auto d-flex align-items-center gap-2" style="max-width: 80ch;">
     <!-- Image box for posts. (optional) -->
-    {%- if let Some(img) = post.header_image_path %}
     <div class="border bg-dark d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-        <img src="{{ img }}" alt="" class="position-relative" style="width: 48px; height: 48px; object-fit: scale-down; image-rendering: pixelated;" />
+        <img src="{{ post.header_image_path.to_static_file_path() }}" alt="" class="position-relative" style="width: 48px; height: 48px; object-fit: scale-down; image-rendering: pixelated;" />
     </div>
-    {%- endif %}
     <!-- Box containing the post title on top, tags on the bottom. -->
     <div class="flex-grow-1 d-flex flex-column" style="">
         <!-- Name box, with optional inline description -->
         <h1 class="h3 mb-0">
             <span class="d-inline-flex align-items-baseline gap-2">
-                <a href="/{{ post.get_path_str() }}" class="nav-link d-inline"><b>{{ post.title }}</b></a>
+                <a href="{{ post.path.to_static_file_path() }}" class="nav-link d-inline"><b>{{ post.title }}</b></a>
                 {%- if self.show_inline_description %}
                 <span class="h6 d-inline">{{ post.description }}</span>
                 {%- endif %}

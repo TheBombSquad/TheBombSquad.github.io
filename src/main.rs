@@ -7,28 +7,23 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::ops::Add;
 use std::path::PathBuf;
 use std::rc::Rc;
 use tracing_subscriber::FmtSubscriber;
-use crate::elements::common::OgType;
+use crate::elements::common::{OgType, PathWrap, SITE_URL, OUT_DIR};
 
 mod elements;
 
-const OUT_DIR: &str = "docs/";
-const HOMEPAGE_PATH: &str = concatcp!(OUT_DIR, "index.html");
-const POST_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts.html");
-const PROJECT_LISTING_PATH: &str = concatcp!(OUT_DIR, "posts/projects.html");
-const TAGS_DIR: &str = concatcp!(OUT_DIR, "tags");
-
+const HOMEPAGE_PATH: &str = concatcp!("index.html");
+const POST_LISTING_PATH: &str = concatcp!("posts.html");
+const PROJECT_LISTING_PATH: &str = concatcp!("posts/projects.html");
+const TAGS_DIR: &str = concatcp!("tags/");
 
 const POSTS_DESCRIPTION: &str = "A listing of all of the posts on this site, sorted by date.";
 const PROJECTS_DESCRIPTION: &str = "A listing of some of the projects I've worked on - in no particular order. This list isn't comprehensive!";
 
-const SITE_URL: &str = "https://bombsquad.dev";
-
-pub fn convert_path_to_url(path: &str) -> String {
-    format!("{}/{}", SITE_URL, path.strip_prefix(OUT_DIR).unwrap_or(path))
-}
+const DEFAULT_IMG_PATH: &str = "images/dragon.png";
 
 fn clean_output_dir(path: &str) {
     tracing::info!("Cleaning up: {}", path);
@@ -51,17 +46,17 @@ fn collect_markdown_posts(path_prefix: &str) -> Vec<Rc<Post>> {
             let entry = entry.unwrap();
             let path = entry.path();
             if path.extension().is_some() && path.extension().unwrap().eq_ignore_ascii_case("md")  {
-                let post_parse = Post::new(&path);
+                let post_parse = Post::new(path);
                 match post_parse {
                     Ok(post) => {
-                        tracing::info!("Parsed markdown file {:?}", path);
+                        //tracing::info!("Parsed markdown file {:?}", path);
 
                         let post_rc = Rc::new(post);
 
                         posts.push(post_rc);
                     }
                     Err(err) => {
-                        tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err);
+                        //tracing::warn!("Failed to parse markdown file {:?}: {:?}", path, err);
                     }
                 }
             } else if path.is_file() {
@@ -86,19 +81,19 @@ fn build_home_page(blog_posts: &[Rc<Post>]) {
     let home_page = HomePage {
         title: Cow::Borrowed("Home"),
         description: Cow::Borrowed("bombsquad.dev"),
-        path: PathBuf::from(OUT_DIR),
+        path: PathWrap::from(HOMEPAGE_PATH),
         navbar: NavigationBar::new(),
         recent_posts: recent_blog_posts,
         show_inline_description: false,
         og_type: OgType::Website,
-        og_url: SITE_URL.to_string()
+        og_image: PathWrap::from(DEFAULT_IMG_PATH),
     };
 
     let mut home_page_file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open(HOMEPAGE_PATH)
+        .open(home_page.path.to_local_file_path())
         .unwrap();
     home_page_file
         .write_all(home_page.render().unwrap().as_bytes())
@@ -107,13 +102,10 @@ fn build_home_page(blog_posts: &[Rc<Post>]) {
 }
 
 fn build_full_post_listing(blog_posts: &[Rc<Post>]) {
-    let path = PathBuf::from(OUT_DIR).join("posts.html");
-    let og_path = convert_path_to_url(&path.to_string_lossy());
-
     let posts_page = PostListingPage {
         title: Cow::Borrowed("Posts"),
         description: Cow::Borrowed(POSTS_DESCRIPTION),
-        path,
+        path: PathWrap::from(POST_LISTING_PATH),
         navbar: NavigationBar::new(),
         show_inline_description: false,
         posts: blog_posts
@@ -122,14 +114,14 @@ fn build_full_post_listing(blog_posts: &[Rc<Post>]) {
             .cloned()
             .collect(),
         og_type: OgType::Website,
-        og_url: og_path
+        og_image: PathWrap::from(DEFAULT_IMG_PATH)
     };
 
     let mut posts_page_file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open(POST_LISTING_PATH)
+        .open(posts_page.path.to_local_file_path())
         .unwrap();
     posts_page_file
         .write_all(posts_page.render().unwrap().as_bytes())
@@ -138,25 +130,22 @@ fn build_full_post_listing(blog_posts: &[Rc<Post>]) {
 }
 
 fn build_project_listing(projects: &[Rc<Post>]) {
-    let path = PathBuf::from(OUT_DIR).join("posts/projects.html");
-    let og_path = convert_path_to_url(&path.to_string_lossy());
-
     let projects_page = PostListingPage {
         title: Cow::Borrowed("Projects"),
         description: Cow::Borrowed(PROJECTS_DESCRIPTION),
-        path,
+        path: PathWrap::from(PROJECT_LISTING_PATH),
         navbar: NavigationBar::new(),
         show_inline_description: true,
         posts: projects.to_vec(),
         og_type: OgType::Website,
-        og_url: og_path,
+        og_image: PathWrap::from(DEFAULT_IMG_PATH)
     };
 
     let mut project_page_file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open(PROJECT_LISTING_PATH)
+        .open(projects_page.path.to_local_file_path())
         .unwrap();
     project_page_file
         .write_all(projects_page.render().unwrap().as_bytes())
@@ -178,18 +167,17 @@ fn build_tag_listing_pages(blog_posts: &[Rc<Post>]) {
         });
 
     for (tag, posts) in tag_map {
-        let path = PathBuf::from(TAGS_DIR).join(tag).with_extension("html");
-        let og_path = convert_path_to_url(&path.to_string_lossy());
+        let path = TAGS_DIR.to_string().add(tag).add(".html");
 
         let tag_page = PostListingPage {
             title: Cow::Owned(format!("Posts tagged {tag}")),
             description: Cow::Owned(format!("Listing of all posts on this website that have been tagged \"{tag}\".")),
-            path: path.clone(),
+            path: PathWrap::from(path),
             navbar: NavigationBar::new(),
             show_inline_description: false,
             posts,
             og_type: OgType::Website,
-            og_url: og_path
+            og_image: PathWrap::from(DEFAULT_IMG_PATH)
         };
 
 
@@ -201,14 +189,14 @@ fn build_tag_listing_pages(blog_posts: &[Rc<Post>]) {
             .create(true)
             .write(true)
             .truncate(true)
-            .open(&path)
+            .open(tag_page.path.to_local_file_path())
             .unwrap();
         tag_page_file
             .write_all(tag_page.render().unwrap().as_bytes())
             .unwrap();
         tag_page_file.flush().unwrap();
 
-        tracing::info!("Created page {:?}", path);
+        tracing::info!("Created page {:?}", tag_page.path);
     }
 }
 
@@ -244,11 +232,36 @@ fn main() {
         let page_creation = PostPage::new(post);
         match page_creation {
             Ok(page) => {
-                tracing::info!("Created page {:?}", page.path);
+                //tracing::info!("Created page {:?}", page.path);
             }
             Err(err) => {
                 tracing::error!("Failed to create page for post {:?}: {:?}", post.title, err);
             }
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_path_wrap() {
+        let a = PathWrap::from("images/dragon.png");
+        let b = PathWrap::from("posts/post.md");
+
+        // Local path, for file output
+        assert_eq!(a.to_local_file_path(), "docs/images/dragon.png");
+        assert_eq!(b.to_local_file_path(), "docs/posts/post.md");
+
+        // Relative path, for linking
+        assert_eq!(a.to_static_file_path(), "/images/dragon.png");
+        assert_eq!(b.to_static_file_path(), "/posts/post.md");
+
+        // URL, for opengraph
+        assert_eq!(a.to_url_string(), "https://bombsquad.dev/images/dragon.png");
+        assert_eq!(b.to_url_string(), "https://bombsquad.dev/posts/post.html");
+
     }
 }

@@ -5,7 +5,7 @@ date: 2026-01-27
 tags:
   - _no-index
   - test_tag
-header_image: /images/post.png
+header_image: images/post.png
 ---
 
 This is a top-secret template post. There's text in it. Isn't that cool?

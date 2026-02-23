@@ -3,7 +3,7 @@ title: About
 description: About bombsquad.dev
 tags:
   - _no-index
-header_image: /images/dragon.png
+header_image: images/dragon.png
 ---
 
 I'm *The BombSquad*, and this is my personal website! (I'm just one person, 

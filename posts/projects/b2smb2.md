@@ -2,7 +2,7 @@
 title: Blend2SMBStage2
 description: Blender plugin for creation of Monkey Ball levels
 tags:
-header_image: "/images/b2smb.png"
+header_image: images/b2smb.png
 ---
 
 ![Screenshot of Blend2SMBStage2](https://github-production-user-asset-6210df.s3.amazonaws.com/35253266/257081449-a280e1f6-c9ac-4ce6-9e55-9fbefea416e2.png) 

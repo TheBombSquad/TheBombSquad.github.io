@@ -8,8 +8,8 @@
     <meta property="og:title" content="{{ title }}" />
     <meta property="og:description" content="{{ description }}" />
     <meta property="og:type" content="{{ og_type }}" />
-    <meta property="og:url" content="{{ og_url }}" />
-    <meta property="og:image" content="" />
+    <meta property="og:url" content="{{ path.to_url_string() }}" />
+    <meta property="og:image" content="{{ og_image.to_url_string() }}" />
     {%- if let OgType::Article(date, tags) = og_type %}
     {%- if let Some(date) = date %}
     <meta property="article:date" content="{{ date }}" />

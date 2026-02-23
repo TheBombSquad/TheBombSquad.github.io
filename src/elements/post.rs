@@ -10,8 +10,8 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use markdown::{CompileOptions, ParseOptions};
-use crate::convert_path_to_url;
-use crate::elements::common::OgType;
+use crate::DEFAULT_IMG_PATH;
+use crate::elements::common::{OgType, PathWrap};
 
 pub struct ReadStats {
     pub num_words: usize,
@@ -21,11 +21,11 @@ pub struct Post {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
     pub body: Cow<'static, str>,
-    pub path: PathBuf,
+    pub path: PathWrap,
     pub date: Option<NaiveDate>,
     pub tags: Vec<String>,
     pub preview: Cow<'static, str>,
-    pub header_image_path: Option<Cow<'static, str>>,
+    pub header_image_path: PathWrap,
     pub read_stats: ReadStats,
 }
 
@@ -56,16 +56,11 @@ impl Post {
         }
     }
 
-    // Strictly for template use - askama does not like it when we pass in a PathBuf/Path.
-    pub fn get_path_str(&self) -> String {
-        self.path.with_extension("html").to_string_lossy().to_string()
-    }
-
-    pub fn new(path: &Path) -> Result<Self> {
+    pub fn new(mut path: PathBuf) -> Result<Self> {
         // Parse front matter
         let matter = Matter::<YAML>::new();
 
-        let post_content_raw = &std::fs::read_to_string(path)?;
+        let post_content_raw = &std::fs::read_to_string(&path)?;
         let parsed_result: ParsedEntity = matter.parse(post_content_raw)?;
 
         let post_content = parsed_result.content;
@@ -92,9 +87,9 @@ impl Post {
         }
 
         let post_header_image = if post_matter.contains_key("header_image") {
-            Some(Cow::Owned(post_matter["header_image"].as_string()?))
+            PathWrap::from(post_matter["header_image"].as_string()?)
         } else {
-            None
+            PathWrap::from(DEFAULT_IMG_PATH)
         };
 
         // Preview is just before the first paragraph break
@@ -120,14 +115,14 @@ impl Post {
         .replace("<table>", "<table class=\"table table-sm table-striped table-bordered\">"); // Hack to make tables look nice
 
         // Resulting post file name should be lowercase for consistency
-        let post_path = path.as_os_str().to_ascii_lowercase();
+        let post_path = PathWrap::from(path);
 
         let post_reading_stats = Post::get_reading_stats(&post_content_body);
 
         let post = Post {
             title: Cow::Owned(post_title),
             description: Cow::Owned(post_description),
-            path: PathBuf::from(post_path),
+            path: post_path,
             body: Cow::Owned(post_content_body),
             preview: Cow::Owned(post_content_preview),
             date: post_creation_date,
@@ -145,31 +140,28 @@ impl Post {
 pub struct PostPage {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
-    pub path: PathBuf,
+    pub path: PathWrap,
     pub post: Rc<Post>,
     pub navbar: NavigationBar,
     pub show_inline_description: bool,
     pub og_type: OgType,
-    pub og_url: String,
+    pub og_image: PathWrap,
 }
 
 impl PostPage {
     pub fn new(post: &Rc<Post>) -> Result<PostPage> {
-        let path = PathBuf::from("docs").join(&post.path);
-        let og_path = convert_path_to_url(&path.to_string_lossy());
-
         let base = PostPage {
             title: post.title.clone(),
             description: post.description.clone(),
-            path,
+            path: post.path.clone(),
             navbar: NavigationBar::new(),
             post: Rc::clone(post),
             show_inline_description: false,
             og_type: OgType::Article(post.date, post.tags.clone()),
-            og_url: og_path,
+            og_image: post.header_image_path.clone(),
         };
 
-        if let Some(parent) = base.path.parent() {
+        if let Some(parent) = base.path.to_path().parent() {
             std::fs::create_dir_all(parent)?;
         }
 
@@ -177,7 +169,7 @@ impl PostPage {
             .create(true)
             .write(true)
             .truncate(true)
-            .open(base.path.with_extension("html"))?;
+            .open(base.path.to_path().with_extension("html"))?;
         file.write_all(base.render()?.as_bytes())?;
         file.flush()?;
 
@@ -190,10 +182,10 @@ impl PostPage {
 pub struct PostListingPage {
     pub title: Cow<'static, str>,
     pub description: Cow<'static, str>,
-    pub path: PathBuf,
+    pub path: PathWrap,
     pub posts: Vec<Rc<Post>>,
     pub navbar: NavigationBar,
     pub show_inline_description: bool,
     pub og_type: OgType,
-    pub og_url: String,
+    pub og_image: PathWrap,
 }
