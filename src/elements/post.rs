@@ -1,17 +1,17 @@
+use crate::elements::common::{OgType, PathWrap};
 use crate::elements::navbar::NavigationBar;
+use crate::DEFAULT_IMG_PATH;
 use anyhow::{Context, Result};
 use askama::Template;
 use chrono::NaiveDate;
 use gray_matter::engine::YAML;
 use gray_matter::{Matter, ParsedEntity};
+use markdown::{CompileOptions, ParseOptions};
 use std::borrow::Cow;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::Rc;
-use markdown::{CompileOptions, ParseOptions};
-use crate::DEFAULT_IMG_PATH;
-use crate::elements::common::{OgType, PathWrap};
 
 pub struct ReadStats {
     pub num_words: usize,
@@ -35,7 +35,7 @@ impl Post {
     }
 
     pub fn has_visible_tags(&self) -> bool {
-        self.tags.iter().any(|t| !t.starts_with("_"))
+        self.tags.iter().any(|t| !t.starts_with('_'))
     }
 
     pub fn get_tag_page_path(&self, tag: &str) -> String {
@@ -46,7 +46,10 @@ impl Post {
     fn get_reading_stats(text_parts: &str) -> ReadStats {
         const WORDS_PER_MIN: f64 = 200.0;
 
-        let num_words = text_parts.split_whitespace().filter(|part| !part.trim().is_empty()).count();
+        let num_words = text_parts
+            .split_whitespace()
+            .filter(|part| !part.trim().is_empty())
+            .count();
         let mins = num_words as f64 / WORDS_PER_MIN;
         let estimated_reading_time = mins.ceil();
 
@@ -56,7 +59,7 @@ impl Post {
         }
     }
 
-    pub fn new(mut path: PathBuf) -> Result<Self> {
+    pub fn new(path: PathBuf) -> Result<Self> {
         // Parse front matter
         let matter = Matter::<YAML>::new();
 
@@ -104,15 +107,21 @@ impl Post {
             markdown::to_html_with_options(&truncated, &markdown::Options::gfm()).unwrap();
 
         // Parse the actual post content
-        let post_content_body =
-        markdown::to_html_with_options(&post_content, &markdown::Options {
-            parse: ParseOptions::gfm(),
-            compile: CompileOptions {
-                gfm_footnote_label_tag_name: Some("h3".to_string()),
-                .. CompileOptions::gfm()
+        let post_content_body = markdown::to_html_with_options(
+            &post_content,
+            &markdown::Options {
+                parse: ParseOptions::gfm(),
+                compile: CompileOptions {
+                    gfm_footnote_label_tag_name: Some("h3".to_string()),
+                    ..CompileOptions::gfm()
+                },
             },
-        }).unwrap()
-        .replace("<table>", "<table class=\"table table-sm table-striped table-bordered\">"); // Hack to make tables look nice
+        )
+        .unwrap()
+        .replace(
+            "<table>",
+            "<table class=\"table table-sm table-striped table-bordered\">",
+        ); // Hack to make tables look nice
 
         // Resulting post file name should be lowercase for consistency
         let post_path = PathWrap::from(path);
@@ -169,23 +178,10 @@ impl PostPage {
             .create(true)
             .write(true)
             .truncate(true)
-            .open(base.path.to_path().with_extension("html"))?;
+            .open(base.path.to_local_file_path())?;
         file.write_all(base.render()?.as_bytes())?;
         file.flush()?;
 
         Ok(base)
     }
-}
-
-#[derive(Template)]
-#[template(path = "post-listing.html", escape = "none")]
-pub struct PostListingPage {
-    pub title: Cow<'static, str>,
-    pub description: Cow<'static, str>,
-    pub path: PathWrap,
-    pub posts: Vec<Rc<Post>>,
-    pub navbar: NavigationBar,
-    pub show_inline_description: bool,
-    pub og_type: OgType,
-    pub og_image: PathWrap,
 }
