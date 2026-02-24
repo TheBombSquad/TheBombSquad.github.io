@@ -8,6 +8,7 @@ use std::io::Write;
 use std::rc::Rc;
 
 const HOMEPAGE_PATH: &str = "index.html";
+const HOMEPAGE_DESCRIPTION: &str = "Home page, blog, and portfolio of 'The BombSquad' - software engineer and electronics enthusiast.";
 #[derive(Template)]
 #[template(path = "home.html", escape = "none")]
 pub struct HomePage {
@@ -30,7 +31,7 @@ pub fn build_home_page(blog_posts: &[Rc<Post>]) {
         .collect::<Vec<Rc<Post>>>();
     let home_page = HomePage {
         title: Cow::Borrowed("Home"),
-        description: Cow::Borrowed("bombsquad.dev"),
+        description: Cow::Borrowed(HOMEPAGE_DESCRIPTION),
         path: PathWrap::from(HOMEPAGE_PATH),
         navbar: NavigationBar::new(),
         recent_posts: recent_blog_posts,

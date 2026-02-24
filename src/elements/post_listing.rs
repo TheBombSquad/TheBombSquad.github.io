@@ -102,7 +102,7 @@ pub fn build_tag_listing_pages(blog_posts: &[Rc<Post>]) {
         let tag_page = PostListingPage {
             title: Cow::Owned(format!("Posts tagged {tag}")),
             description: Cow::Owned(format!(
-                "Listing of all posts on this website that have been tagged \"{tag}\"."
+                "Listing of all posts on this website that have been tagged \'{tag}\'."
             )),
             path: PathWrap::from(path),
             navbar: NavigationBar::new(),
