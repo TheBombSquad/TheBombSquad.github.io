@@ -211,8 +211,7 @@ Nice table formatting
 table.table {
     width: auto;
     display: table;
-    margin: 0.5rem auto;
-    margin-bottom: 1.5rem;
+    margin: 0.5rem auto 1.5rem;
 }
 
 table.table td{
