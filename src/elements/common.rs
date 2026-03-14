@@ -1,11 +1,13 @@
 use chrono::NaiveDate;
 use std::fmt::{Display, Formatter};
 use std::path::{Path, PathBuf};
+use const_format::concatcp;
 
 pub const OUT_DIR: &str = "docs/";
 pub const SITE_URL: &str = "https://bombsquad.dev";
 
 pub const DEFAULT_IMG_PATH: &str = "images/dragon.png";
+pub const RSS_FEED_PATH: &str = concatcp!(OUT_DIR, "rss.xml");
 
 /// Enum for opengraph types - article, etc
 pub enum OgType {

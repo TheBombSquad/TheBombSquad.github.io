@@ -5,6 +5,10 @@ use crate::elements::post_listing::{
     build_full_post_listing, build_project_listing, build_tag_listing_pages, TAGS_DIR,
 };
 use const_format::concatcp;
+use anyhow::Result;
+use rss::{ChannelBuilder, ItemBuilder};
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::rc::Rc;
 use tracing_subscriber::FmtSubscriber;
 
@@ -56,6 +60,56 @@ fn collect_markdown_posts(path_prefix: &str) -> Vec<Rc<Post>> {
     posts
 }
 
+fn build_rss_feed(posts: &[Rc<Post>]) -> Result<()> {
+    tracing::info!("Building RSS feed");
+
+    let filtered_posts = posts
+        .iter()
+        .filter(|x| !x.has_tag("_no-index"))
+        .cloned()
+        .collect::<Vec<Rc<Post>>>();
+
+    let mut channel = ChannelBuilder::default()
+        .title("bombsquad.dev")
+        .link(SITE_URL)
+        .description("Blog posts from bombsquad.dev")
+        .last_build_date(
+            chrono::Utc::now().to_rfc2822()
+        )
+        .build();
+
+    for post in filtered_posts {
+        // Get local timezone
+        let date = match (post.date) {
+            Some(d) => d.and_hms_opt(0,0,0).unwrap().and_utc().to_rfc2822(),
+            None => "Unknown".parse()?
+        };
+
+        let item = ItemBuilder::default()
+            .title(Some(post.title.to_string()))
+            .description(Some(post.description.to_string()))
+            .link(post.path.to_static_file_path())
+            .pub_date(date)
+            .build();
+
+        channel.items.push(item);
+    }
+
+    let xml = channel.to_string();
+
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(RSS_FEED_PATH)?;
+    file.write_all(xml.as_bytes())?;
+    file.flush()?;
+
+    tracing::info!("RSS feed written");
+
+    Ok(())
+}
+
 fn main() {
     // Logging
     let tracing_subscriber = FmtSubscriber::new();
@@ -75,6 +129,11 @@ fn main() {
 
     // Posts listing page
     build_full_post_listing(&blog_posts);
+
+    // RSS feed
+    if let Err(err) = build_rss_feed(&blog_posts) {
+        tracing::error!("Failed to build RSS feed: {}", err);
+    }
 
     // Projects
     let projects = collect_markdown_posts("posts/projects");
