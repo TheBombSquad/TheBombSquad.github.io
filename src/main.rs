@@ -6,7 +6,7 @@ use crate::elements::post_listing::{
 };
 use anyhow::Result;
 use const_format::concatcp;
-use rss::{ChannelBuilder, ItemBuilder};
+use rss::{ChannelBuilder, GuidBuilder, ItemBuilder};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::rc::Rc;
@@ -82,10 +82,16 @@ fn build_rss_feed(posts: &[Rc<Post>]) -> Result<()> {
             None => "Unknown".parse()?,
         };
 
+        let guid = GuidBuilder::default()
+            .permalink(true)
+            .value(post.path.to_url_string())
+            .build();
+
         let item = ItemBuilder::default()
             .title(Some(post.title.to_string()))
-            .description(Some(post.description.to_string()))
+            .description(Some(post.preview.to_string()))
             .link(post.path.to_static_file_path())
+            .guid(guid)
             .pub_date(date)
             .build();
 
