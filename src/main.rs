@@ -77,8 +77,7 @@ fn build_rss_feed(posts: &[Rc<Post>]) -> Result<()> {
         .build();
 
     for post in filtered_posts {
-        // Get local timezone
-        let date = match (post.date) {
+        let date = match post.date {
             Some(d) => d.and_hms_opt(0, 0, 0).unwrap().and_utc().to_rfc2822(),
             None => "Unknown".parse()?,
         };
