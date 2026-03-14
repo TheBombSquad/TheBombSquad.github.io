@@ -4,8 +4,8 @@ use crate::elements::post::{Post, PostPage};
 use crate::elements::post_listing::{
     build_full_post_listing, build_project_listing, build_tag_listing_pages, TAGS_DIR,
 };
-use const_format::concatcp;
 use anyhow::Result;
+use const_format::concatcp;
 use rss::{ChannelBuilder, ItemBuilder};
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -73,16 +73,14 @@ fn build_rss_feed(posts: &[Rc<Post>]) -> Result<()> {
         .title("bombsquad.dev")
         .link(SITE_URL)
         .description("Blog posts from bombsquad.dev")
-        .last_build_date(
-            chrono::Utc::now().to_rfc2822()
-        )
+        .last_build_date(chrono::Utc::now().to_rfc2822())
         .build();
 
     for post in filtered_posts {
         // Get local timezone
         let date = match (post.date) {
-            Some(d) => d.and_hms_opt(0,0,0).unwrap().and_utc().to_rfc2822(),
-            None => "Unknown".parse()?
+            Some(d) => d.and_hms_opt(0, 0, 0).unwrap().and_utc().to_rfc2822(),
+            None => "Unknown".parse()?,
         };
 
         let item = ItemBuilder::default()
@@ -158,8 +156,8 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
     use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn test_path_wrap() {

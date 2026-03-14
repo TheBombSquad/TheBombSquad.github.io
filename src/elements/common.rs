@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
+use const_format::concatcp;
 use std::fmt::{Display, Formatter};
 use std::path::{Path, PathBuf};
-use const_format::concatcp;
 
 pub const OUT_DIR: &str = "docs/";
 pub const SITE_URL: &str = "https://bombsquad.dev";
